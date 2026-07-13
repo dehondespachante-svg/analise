@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic"; // nunca cachear esta rota
+
 const TOKEN = "6ad74bc2cdc8d84953ea21ad89c25715d49ad614757b8aea5c599050b5d6e6dc";
 // Firebase Realtime Database — persiste sem precisar de regras Firestore
 const RTDB = "https://beto-58a10-default-rtdb.firebaseio.com/sgdw-tunnel.json";
 // URL de producao — usada como fallback quando rodando localmente (dev server)
 const PROD_API = "https://analise-inky.vercel.app/api/sgdw-tunnel";
 
-// Cache em memoria — sobrevive enquanto o container Vercel / dev server estiver quente
+// Cache em memoria — TTL muito curto pois tunnel muda com frequencia
 let memCache: { url: string; at: number } | null = null;
+const CACHE_TTL = 15_000; // 15 segundos
 
 async function rtdbRead(): Promise<string | null> {
   try {
@@ -48,7 +51,7 @@ const isLocal = !process.env.VERCEL_URL;
 
 export async function GET() {
   // 1. Cache em memoria (mesmo container — mais rapido)
-  if (memCache && Date.now() - memCache.at < 3_600_000) {
+  if (memCache && Date.now() - memCache.at < CACHE_TTL) {
     return NextResponse.json({ tunnelUrl: memCache.url });
   }
   // 2. Firebase Realtime Database (persistente entre containers)
@@ -56,14 +59,6 @@ export async function GET() {
   if (rtdbUrl) {
     memCache = { url: rtdbUrl, at: Date.now() };
     return NextResponse.json({ tunnelUrl: rtdbUrl });
-  }
-  // 3. Dev local: lê da API de producao como fallback (server-to-server, sem CORS)
-  if (isLocal) {
-    const prodUrl = await prodRead();
-    if (prodUrl) {
-      memCache = { url: prodUrl, at: Date.now() };
-      return NextResponse.json({ tunnelUrl: prodUrl });
-    }
   }
   return NextResponse.json({ tunnelUrl: null });
 }

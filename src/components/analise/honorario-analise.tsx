@@ -52,7 +52,7 @@ import {
   Wifi,
   X,
 } from "lucide-react";
-import SgdwModo from "@/src/components/analise/sgdw-tab";
+import SgdwConexao from "@/src/components/analise/sgdw-tab";
 import {
   carregarBaseAnualCache,
   carregarRelatorioCache,
@@ -2387,6 +2387,11 @@ export default function AnaliseHonorariosPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const loteInputRef = useRef<HTMLInputElement | null>(null);
   const [relatorioUpload, setRelatorioUpload] = useState<RelatorioHonorarios | null>(null);
+  const [sgdwRelatorio, setSgdwRelatorio] = useState<RelatorioHonorarios | null>(null);
+  const relatorioAtivo = useMemo(
+    () => (modoAnalise === "sgdw" ? sgdwRelatorio : relatorioUpload),
+    [modoAnalise, sgdwRelatorio, relatorioUpload]
+  );
   const [baseAnualLocal, setBaseAnualLocal] = useState<BaseAnualCache | null>(null);
   const [processando, setProcessando] = useState(false);
   const [statusUpload, setStatusUpload] = useState("");
@@ -2407,12 +2412,12 @@ export default function AnaliseHonorariosPage() {
 
   const servicosFiltro = useMemo(
     () =>
-      (relatorioUpload?.servicosPorPeriodo || [])
+      (relatorioAtivo?.servicosPorPeriodo || [])
         .filter((servico) =>
           servico.periodos.some((periodo) => periodo.quantidade > 0 || periodo.valorOs > 0 || periodo.honorarios > 0)
         )
         .sort((a, b) => a.servico.localeCompare(b.servico, "pt-BR") || a.codigo - b.codigo),
-    [relatorioUpload]
+    [relatorioAtivo]
   );
   const servicosSelecionadosAtivos = useMemo(
     () => {
@@ -2443,8 +2448,8 @@ export default function AnaliseHonorariosPage() {
     return Array.from(unicos.values());
   }, [servicosFiltrados, servicosFiltroEncontrados]);
   const dadosServico = useMemo(
-    () => (relatorioUpload ? montarRelatorioServicos(relatorioUpload, servicosSelecionadosAtivos) : relatorioVazio),
-    [relatorioUpload, servicosSelecionadosAtivos]
+    () => (relatorioAtivo ? montarRelatorioServicos(relatorioAtivo, servicosSelecionadosAtivos) : relatorioVazio),
+    [relatorioAtivo, servicosSelecionadosAtivos]
   );
   function reiniciarVisualizacaoFiltrada() {
     setAbaAtiva("comparacao");
@@ -2517,8 +2522,8 @@ export default function AnaliseHonorariosPage() {
     ];
   }, [dadosServico]);
   const planoCompetencia = useMemo(
-    () => (relatorioUpload ? montarPlanoCompetencia(dadosServico, modoMetaCompetencia) : null),
-    [dadosServico, modoMetaCompetencia, relatorioUpload]
+    () => (relatorioAtivo ? montarPlanoCompetencia(dadosServico, modoMetaCompetencia) : null),
+    [dadosServico, modoMetaCompetencia, relatorioAtivo]
   );
   const competenciaMetaFechada = Boolean(
     planoCompetencia?.modo === "mes-anterior" && planoCompetencia.realizado > 0 && !planoCompetencia.emAndamento
@@ -2710,7 +2715,7 @@ export default function AnaliseHonorariosPage() {
     ? periodosReconhecidos >= MIN_PERIODOS_COMPARACAO
     : paresAnuaisComparaveis > 0;
   const comparacaoMensal = analiseMensal && periodosAnalisados.length > 1;
-  const comparacaoBloqueadaPorBase = Boolean(relatorioUpload) && !periodoUnico && periodosReconhecidos > 0 && !comparacaoSuficiente;
+  const comparacaoBloqueadaPorBase = Boolean(relatorioAtivo) && !periodoUnico && periodosReconhecidos > 0 && !comparacaoSuficiente;
   const faltamPeriodosComparacao = analiseMensal
     ? Math.max(0, MIN_PERIODOS_COMPARACAO - periodosReconhecidos)
     : paresAnuaisComparaveis
@@ -3230,7 +3235,7 @@ export default function AnaliseHonorariosPage() {
   }, [dadosAtuais, planoCompetencia, totais, valorOsDisponivel]);
 
   const radarDecisor = useMemo(() => {
-    if (!relatorioUpload) return null;
+    if (!relatorioAtivo) return null;
 
     const meta = dadosAtuais.comparacao?.metaCrescimento || 0.3;
     const crescimentoHonorarios = totais.crescimentoHonorarios ?? 0;
@@ -3467,13 +3472,13 @@ export default function AnaliseHonorariosPage() {
     periodoUnico,
     periodosImportados.length,
     qualidadeLeitura,
-    relatorioUpload,
+    relatorioAtivo,
     totais,
     valorOsDisponivel,
   ]);
 
   const mesaEstrategica = useMemo(() => {
-    if (!relatorioUpload || !radarDecisor || !comparacaoSuficiente) return null;
+    if (!relatorioAtivo || !radarDecisor || !comparacaoSuficiente) return null;
 
     const periodosFechados = periodosImportadosDoRelatorio(dadosServico).filter(
       (periodo) =>
@@ -3756,13 +3761,13 @@ export default function AnaliseHonorariosPage() {
     periodosAnalisados,
     planoCompetencia,
     radarDecisor,
-    relatorioUpload,
+    relatorioAtivo,
     totais,
     valorOsDisponivel,
   ]);
 
   const planoPnvaCore = useMemo(() => {
-    if (!relatorioUpload || !radarDecisor) return null;
+    if (!relatorioAtivo || !radarDecisor) return null;
 
     const servicoForte = analisePreditiva.servicoOportunidade?.servico || totais.servicoLider.servico || "servico lider";
     const servicoCritico = analisePreditiva.servicoCritico?.servico || "servicos que cairam";
@@ -3869,12 +3874,12 @@ export default function AnaliseHonorariosPage() {
     qualidadeLeitura.auditoriasReais.length,
     mesaEstrategica,
     radarDecisor,
-    relatorioUpload,
+    relatorioAtivo,
     totais,
   ]);
 
   const previsaoCampo = useMemo<PrevisaoCampo | null>(() => {
-    if (!relatorioUpload) return null;
+    if (!relatorioAtivo) return null;
 
     const periodos = periodosImportadosDoRelatorio(dadosAtuais).filter(
       (periodo) => periodo.honorarios > 0 || periodo.quantidade > 0
@@ -4170,10 +4175,10 @@ export default function AnaliseHonorariosPage() {
       servicos,
       grafico,
     };
-  }, [dadosAtuais, planoCompetencia, planoPnvaCore, qualidadeLeitura.auditoriasReais.length, relatorioUpload]);
+  }, [dadosAtuais, planoCompetencia, planoPnvaCore, qualidadeLeitura.auditoriasReais.length, relatorioAtivo]);
 
   const metaAnual = useMemo<MetaAnual | null>(() => {
-    if (!relatorioUpload) return null;
+    if (!relatorioAtivo) return null;
 
     const periodos = periodosImportadosDoRelatorio(dadosAtuais).filter(
       (periodo) => periodo.honorarios > 0 || periodo.quantidade > 0
@@ -4300,10 +4305,10 @@ export default function AnaliseHonorariosPage() {
       servicos,
       grafico,
     };
-  }, [baseAnualLocal, contextoAnalise, dadosAtuais, relatorioUpload]);
+  }, [baseAnualLocal, contextoAnalise, dadosAtuais, relatorioAtivo]);
 
   const organismoVivo = useMemo<OrganismoVivo | null>(() => {
-    if (!relatorioUpload) return null;
+    if (!relatorioAtivo) return null;
 
     const status: RadarStatus =
       previsaoCampo?.status === "critico" || planoCompetencia?.status === "critico" || radarDecisor?.statusGeral === "critico"
@@ -4415,13 +4420,13 @@ export default function AnaliseHonorariosPage() {
     qualidadeLeitura.auditoriasReais.length,
     quantidadeFuncionarios,
     radarDecisor,
-    relatorioUpload,
+    relatorioAtivo,
     totais.metaProximoPeriodo,
     totais.servicoLider.servico,
   ]);
 
   const planoFinanceiro = useMemo<PlanoFinanceiro | null>(() => {
-    if (!relatorioUpload) return null;
+    if (!relatorioAtivo) return null;
 
     const periodos = periodosImportadosDoRelatorio(dadosAtuais);
     const periodoAtual = periodos.at(-1);
@@ -4623,13 +4628,13 @@ export default function AnaliseHonorariosPage() {
     dadosAtuais,
     planoCompetencia,
     qualidadeLeitura.auditoriasReais.length,
-    relatorioUpload,
+    relatorioAtivo,
     totais.honorariosAtualComparacao,
     valorOsDisponivel,
   ]);
 
   const metasDinamicas = useMemo<MetaDinamica[]>(() => {
-    if (!relatorioUpload) return [];
+    if (!relatorioAtivo) return [];
 
     const quedaForte = analisePreditiva.ultimoCrescimento < -0.2;
     const servicoCritico = analisePreditiva.servicoCritico?.servico || "servicos em queda";
@@ -4678,10 +4683,10 @@ export default function AnaliseHonorariosPage() {
         progresso: limitarPercentual(analisePreditiva.risco === "Alto" ? 30 : analisePreditiva.risco === "Medio" ? 55 : 78),
       },
     ];
-  }, [analisePreditiva, planoCompetencia, relatorioUpload, totais, valorOsDisponivel]);
+  }, [analisePreditiva, planoCompetencia, relatorioAtivo, totais, valorOsDisponivel]);
 
   const tendenciasDinamicas = useMemo<TendenciaDinamica[]>(() => {
-    if (!relatorioUpload) return [];
+    if (!relatorioAtivo) return [];
 
     return [
       {
@@ -4715,7 +4720,7 @@ export default function AnaliseHonorariosPage() {
         recomendacao: leituraDinamica.meta,
       },
     ];
-  }, [analisePreditiva, leituraDinamica, planoCompetencia, relatorioUpload, totais, valorOsDisponivel]);
+  }, [analisePreditiva, leituraDinamica, planoCompetencia, relatorioAtivo, totais, valorOsDisponivel]);
 
   const mixServicosPizza = useMemo(() => {
     const total = dadosAtuais.servicos.reduce((acc, servico) => acc + servico.honorarios2026, 0);
@@ -4955,7 +4960,7 @@ export default function AnaliseHonorariosPage() {
   }, [analisePreditiva, dadosAtuais.servicos, leituraDinamica]);
 
   const mapaAreas = useMemo(() => {
-    if (!relatorioUpload) return [];
+    if (!relatorioAtivo) return [];
 
     return [
       {
@@ -5029,7 +5034,7 @@ export default function AnaliseHonorariosPage() {
         motivo: `Risco ${analisePreditiva.risco}; previsao de ${moeda.format(analisePreditiva.previsaoProximo)}.`,
       },
     ];
-  }, [analisePreditiva, comparacaoMensal, leituraDinamica, relatorioUpload, totais, valorOsDisponivel]);
+  }, [analisePreditiva, comparacaoMensal, leituraDinamica, relatorioAtivo, totais, valorOsDisponivel]);
 
   const imprimirAba = (aba: Aba) => {
     setEscopoImpressao(aba);
@@ -5058,7 +5063,7 @@ export default function AnaliseHonorariosPage() {
         <Printer size={17} />
         <span>Imprimir esta aba</span>
       </button>
-      {relatorioUpload && (
+      {relatorioAtivo && (
         <small>
           Filtro: {contextoAnalise.recorteLabel}; {contextoAnalise.filtroServicos}. Meta:{" "}
           {planoCompetencia?.label || "sem competencia"}.
@@ -5140,7 +5145,7 @@ export default function AnaliseHonorariosPage() {
         </div>
 
         {/* Nav items */}
-        {modoAnalise === "honorarios" && (
+        {(modoAnalise === "honorarios" || modoAnalise === "sgdw") && (
           <nav className={styles.sidebarNav} aria-label="Abas da analise">
             {abas.map((aba) => (
               <button
@@ -5255,10 +5260,10 @@ export default function AnaliseHonorariosPage() {
           />
         )}
 
-        {modoAnalise === "sgdw" && <SgdwModo />}
+        {modoAnalise === "sgdw" && <SgdwConexao onRelatorio={setSgdwRelatorio} />}
 
-        <div className={modoAnalise === "honorarios" ? "" : styles.modeHidden}>
-        <section className={`${styles.topPanel} ${relatorioUpload ? "" : styles.topPanelEmpty}`}>
+        <div className={(modoAnalise === "honorarios" || (modoAnalise === "sgdw" && !!relatorioAtivo)) ? "" : styles.modeHidden}>
+        <section className={`${styles.topPanel} ${relatorioAtivo ? "" : styles.topPanelEmpty}`}>
           <div className={styles.topIntro}>
             <h1>Analise de ganhos e metas</h1>
             <p>
@@ -5266,7 +5271,7 @@ export default function AnaliseHonorariosPage() {
               servicos que puxam resultado, alertas de preco e metas de acompanhamento.
             </p>
           </div>
-          {relatorioUpload && (
+          {relatorioAtivo && (
             <div className={styles.topMetric}>
               <span>{contextoAnalise.topoTitulo}</span>
               <strong>
@@ -5287,7 +5292,7 @@ export default function AnaliseHonorariosPage() {
           )}
         </section>
 
-        {!relatorioUpload && (
+        {modoAnalise === "honorarios" && !relatorioUpload && (
           <section
             className={styles.uploadZone}
             onClick={() => !processando && abrirSeletorArquivo(inputRef, "analise-arquivos-input")}
@@ -5327,7 +5332,7 @@ export default function AnaliseHonorariosPage() {
           </section>
         )}
 
-        {relatorioUpload && (
+        {relatorioAtivo && (
           <>
         <section className={styles.serviceFilterPanel}>
           <div className={styles.serviceSelectWrap}>

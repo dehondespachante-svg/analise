@@ -35,9 +35,19 @@ export type SgdwServico = {
 export type SgdwDados = {
   periodos: SgdwPeriodo[];
   servicos: SgdwServico[];
+  rawLinhas: SgdwLinhaBruta[];
   totalHonorarios: number;
   totalRecebido: number;
   totalQuantidade: number;
   taxaGlobal: number;
   geradoEm: string;
+};
+
+export type SgdwExplorerAba =
+  | "os" | "clientes" | "veiculos" | "servicos"
+  | "caixa" | "funcionarios" | "schema";
+
+export type SgdwPaginaDados = {
+  linhas: Record<string, unknown>[];
+  total: number;
 };
