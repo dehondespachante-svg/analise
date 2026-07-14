@@ -132,6 +132,72 @@ function cellColor(v: unknown, format?: string): string {
   }
 }
 
+// ─── Date helpers ────────────────────────────────────────────────────────────
+
+function isoHoje(): string { return new Date().toISOString().slice(0, 10); }
+function isoDiasAtras(n: number): string {
+  const d = new Date(); d.setDate(d.getDate() - n);
+  return d.toISOString().slice(0, 10);
+}
+function isoInicioMes(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+function isoInicioAno(): string { return `${new Date().getFullYear()}-01-01`; }
+
+type Preset = { label: string; ini: string; fim: string } | { label: string; ini: undefined; fim: undefined };
+
+function getPresets(): Preset[] {
+  const hoje = isoHoje();
+  return [
+    { label: "Hoje",      ini: hoje,             fim: hoje },
+    { label: "7 dias",    ini: isoDiasAtras(7),  fim: hoje },
+    { label: "Este mes",  ini: isoInicioMes(),   fim: hoje },
+    { label: "Este ano",  ini: isoInicioAno(),   fim: hoje },
+    { label: "Tudo",      ini: undefined,        fim: undefined },
+  ];
+}
+
+function PresetButtons({
+  dataIni, dataFim,
+  onSelect,
+}: {
+  dataIni?: string; dataFim?: string;
+  onSelect: (ini: string | undefined, fim: string | undefined) => void;
+}) {
+  const presets = getPresets();
+  const hoje = isoHoje();
+  const ativo = presets.find(p => {
+    if (p.ini === undefined) return !dataIni && !dataFim;
+    return dataIni === p.ini && dataFim === p.fim;
+  });
+  const btnStyle = (active: boolean): React.CSSProperties => ({
+    padding: "3px 9px", borderRadius: 5, border: "1px solid",
+    cursor: "pointer", fontSize: "0.68rem", fontWeight: 600,
+    borderColor: active ? "var(--accent)" : "#d0ddd6",
+    background: active ? "var(--accent)" : "#f8fbf8",
+    color: active ? "#fff" : "#555",
+    whiteSpace: "nowrap",
+  });
+  return (
+    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+      {presets.map(p => (
+        <button key={p.label} type="button" style={btnStyle(ativo?.label === p.label)}
+          onClick={() => onSelect(p.ini, p.fim)}>
+          {p.label}
+        </button>
+      ))}
+      <span style={{ fontSize: "0.65rem", color: "#aaa", marginLeft: 4, alignSelf: "center" }}>
+        {hoje}
+      </span>
+    </div>
+  );
+}
+
+function filtroMesAtual(): { dataIni: string; dataFim: string } {
+  return { dataIni: isoInicioMes(), dataFim: isoHoje() };
+}
+
 // ─── KPI Bar ─────────────────────────────────────────────────────────────────
 
 function KpiBar({ cards }: { cards: Array<{ label: string; valor: string; cor?: string }> }) {
@@ -158,62 +224,82 @@ function KpiBar({ cards }: { cards: Array<{ label: string; valor: string; cor?: 
 
 function OsFiltroBar({ filtros, onChange }: { filtros: OsFiltros; onChange: (f: OsFiltros) => void }) {
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8, padding: "8px 10px", background: "#f8fbf8", borderRadius: 8, border: "1px solid #e0e8e0" }}>
-      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#7a9a84", textTransform: "uppercase", letterSpacing: "0.05em" }}>Filtros:</span>
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
-        <span>De</span>
-        <input type="date" value={filtros.dataIni ?? ""} onChange={e => onChange({ ...filtros, dataIni: e.target.value || undefined })}
-          style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
-      </label>
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
-        <span>Ate</span>
-        <input type="date" value={filtros.dataFim ?? ""} onChange={e => onChange({ ...filtros, dataFim: e.target.value || undefined })}
-          style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
-      </label>
-      <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#555", cursor: "pointer" }}>
-        <input type="checkbox" checked={!!filtros.incluirCanceladas} onChange={e => onChange({ ...filtros, incluirCanceladas: e.target.checked })} />
-        Incluir canceladas
-      </label>
-      {(filtros.dataIni || filtros.dataFim || filtros.incluirCanceladas) && (
-        <button type="button" onClick={() => onChange({})}
-          style={{ padding: "2px 8px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#fff", cursor: "pointer", fontSize: "0.7rem", color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
-          <X size={10} /> Limpar
-        </button>
-      )}
+    <div style={{ marginBottom: 8, padding: "9px 12px", background: "#f8fbf8", borderRadius: 8, border: "1px solid #e0e8e0", display: "flex", flexDirection: "column", gap: 7 }}>
+      {/* Preset row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.63rem", fontWeight: 700, color: "#7a9a84", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2 }}>Periodo:</span>
+        <PresetButtons
+          dataIni={filtros.dataIni} dataFim={filtros.dataFim}
+          onSelect={(ini, fim) => onChange({ ...filtros, dataIni: ini, dataFim: fim })}
+        />
+      </div>
+      {/* Custom date row */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
+          De
+          <input type="date" value={filtros.dataIni ?? ""} onChange={e => onChange({ ...filtros, dataIni: e.target.value || undefined })}
+            style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
+          Ate
+          <input type="date" value={filtros.dataFim ?? ""} onChange={e => onChange({ ...filtros, dataFim: e.target.value || undefined })}
+            style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#555", cursor: "pointer" }}>
+          <input type="checkbox" checked={!!filtros.incluirCanceladas} onChange={e => onChange({ ...filtros, incluirCanceladas: e.target.checked })} />
+          Incluir canceladas
+        </label>
+        {(filtros.dataIni || filtros.dataFim || filtros.incluirCanceladas) && (
+          <button type="button" onClick={() => onChange({})}
+            style={{ padding: "2px 8px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#fff", cursor: "pointer", fontSize: "0.7rem", color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
+            <X size={10} /> Limpar
+          </button>
+        )}
+      </div>
     </div>
   );
 }
 
 function CaixaFiltroBar({ filtros, onChange }: { filtros: CaixaFiltros; onChange: (f: CaixaFiltros) => void }) {
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 8, padding: "8px 10px", background: "#f8fbf8", borderRadius: 8, border: "1px solid #e0e8e0" }}>
-      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#7a9a84", textTransform: "uppercase", letterSpacing: "0.05em" }}>Filtros:</span>
-      <select value={filtros.grupo ?? ""} onChange={e => onChange({ ...filtros, grupo: e.target.value as CaixaFiltros["grupo"] })}
-        style={{ padding: "3px 8px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem", background: "#fff" }}>
-        <option value="">Todos</option>
-        <option value="1">A Receber</option>
-        <option value="2">A Pagar</option>
-      </select>
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
-        <span>De</span>
-        <input type="date" value={filtros.dataIni ?? ""} onChange={e => onChange({ ...filtros, dataIni: e.target.value || undefined })}
-          style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
-      </label>
-      <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
-        <span>Ate</span>
-        <input type="date" value={filtros.dataFim ?? ""} onChange={e => onChange({ ...filtros, dataFim: e.target.value || undefined })}
-          style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
-      </label>
-      <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#555", cursor: "pointer" }}>
-        <input type="checkbox" checked={!!filtros.apenasAberto} onChange={e => onChange({ ...filtros, apenasAberto: e.target.checked })} />
-        Apenas abertos
-      </label>
-      {(filtros.grupo || filtros.dataIni || filtros.dataFim || filtros.apenasAberto) && (
-        <button type="button" onClick={() => onChange({})}
-          style={{ padding: "2px 8px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#fff", cursor: "pointer", fontSize: "0.7rem", color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
-          <X size={10} /> Limpar
-        </button>
-      )}
+    <div style={{ marginBottom: 8, padding: "9px 12px", background: "#f8fbf8", borderRadius: 8, border: "1px solid #e0e8e0", display: "flex", flexDirection: "column", gap: 7 }}>
+      {/* Preset row */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.63rem", fontWeight: 700, color: "#7a9a84", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2 }}>Periodo:</span>
+        <PresetButtons
+          dataIni={filtros.dataIni} dataFim={filtros.dataFim}
+          onSelect={(ini, fim) => onChange({ ...filtros, dataIni: ini, dataFim: fim })}
+        />
+      </div>
+      {/* Custom options row */}
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+        <select value={filtros.grupo ?? ""} onChange={e => onChange({ ...filtros, grupo: e.target.value as CaixaFiltros["grupo"] })}
+          style={{ padding: "3px 8px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem", background: "#fff" }}>
+          <option value="">Todos</option>
+          <option value="1">A Receber</option>
+          <option value="2">A Pagar</option>
+        </select>
+        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
+          De
+          <input type="date" value={filtros.dataIni ?? ""} onChange={e => onChange({ ...filtros, dataIni: e.target.value || undefined })}
+            style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
+          Ate
+          <input type="date" value={filtros.dataFim ?? ""} onChange={e => onChange({ ...filtros, dataFim: e.target.value || undefined })}
+            style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#555", cursor: "pointer" }}>
+          <input type="checkbox" checked={!!filtros.apenasAberto} onChange={e => onChange({ ...filtros, apenasAberto: e.target.checked })} />
+          Apenas abertos
+        </label>
+        {(filtros.grupo || filtros.dataIni || filtros.dataFim || filtros.apenasAberto) && (
+          <button type="button" onClick={() => onChange({})}
+            style={{ padding: "2px 8px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#fff", cursor: "pointer", fontSize: "0.7rem", color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
+            <X size={10} /> Limpar
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -434,9 +520,9 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
   const [dados, setDados]           = useState<SgdwPaginaDados | null>(null);
   const [erro, setErro]             = useState<string | null>(null);
 
-  // Tab-specific filters
-  const [osFiltros, setOsFiltros]       = useState<OsFiltros>({});
-  const [caixaFiltros, setCaixaFiltros] = useState<CaixaFiltros>({});
+  // Tab-specific filters — default: este mês
+  const [osFiltros, setOsFiltros]       = useState<OsFiltros>(filtroMesAtual);
+  const [caixaFiltros, setCaixaFiltros] = useState<CaixaFiltros>(filtroMesAtual);
 
   // KPI
   const [osKpi, setOsKpi]       = useState<SgdwOsKpi | null>(null);
