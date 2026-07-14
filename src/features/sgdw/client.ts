@@ -393,3 +393,36 @@ export async function buscarFuncionariosSgdw(config: SgdwConfig): Promise<SgdwPa
   });
   return { linhas: r.rows, total: r.rows.length };
 }
+
+// ─── Planilha empresa/mês ──────────────────────────────────────────────────────
+
+export async function buscarOsEmpresaMesSgdw(
+  config: SgdwConfig,
+  clinumer: number,
+  ano: number,
+  mes: number
+): Promise<SgdwPaginaDados> {
+  const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", {
+    sql: `SELECT FIRST 500 SKIP 0
+      o.ORDNUMER,
+      o.ORDDTEMI AS DATA,
+      COALESCE(TRIM(s.SERDESCR), '-') AS SERVICO,
+      COALESCE(TRIM(v.VEIPLACA), '-') AS PLACA,
+      COALESCE(TRIM(v.VEIRENAV), '-') AS RENAVAM,
+      COALESCE(TRIM(c.CLINOMES), '-') AS CLIENTE,
+      COALESCE(o.ORDVLTOT, 0) AS HONORARIOS,
+      COALESCE(o.ORDVLREC, 0) AS RECEBIDO,
+      COALESCE(o.ORDVLTOT, 0) - COALESCE(o.ORDVLREC, 0) AS SALDO
+    FROM TBORDSE o
+    LEFT JOIN TBCLIEN c ON c.CLINUMER = o.ORDORIGE
+    LEFT JOIN TBVEICU v ON v.VEINUMER = o.VEINUMER
+    LEFT JOIN TBSERVI s ON s.SERNUMER = o.SOSNUMER
+    WHERE o.ORDORIGE = ?
+      AND EXTRACT(YEAR FROM o.ORDDTEMI) = ?
+      AND EXTRACT(MONTH FROM o.ORDDTEMI) = ?
+      AND COALESCE(o.ORDCANC, 0) = 0
+    ORDER BY o.ORDDTEMI, o.ORDNUMER`,
+    params: [clinumer, ano, mes],
+  });
+  return { linhas: r.rows, total: r.rows.length };
+}
