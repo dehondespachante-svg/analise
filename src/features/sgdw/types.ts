@@ -52,3 +52,32 @@ export type SgdwPaginaDados = {
   linhas: Record<string, unknown>[];
   total: number;
 };
+
+export type OsFiltros = {
+  dataIni?: string;
+  dataFim?: string;
+  apenasAberto?: boolean;
+  incluirCanceladas?: boolean;
+  servico?: string;
+};
+
+export type CaixaFiltros = {
+  grupo?: "" | "1" | "2";
+  dataIni?: string;
+  dataFim?: string;
+  apenasAberto?: boolean;
+};
+
+export type SgdwOsKpi = {
+  totalOs: number;
+  totalHonorarios: number;
+  totalRecebido: number;
+  totalSaldo: number;
+};
+
+export type SgdwCaixaKpi = {
+  totalReceber: number;
+  totalRecebido: number;
+  totalPagar: number;
+  totalPago: number;
+};
