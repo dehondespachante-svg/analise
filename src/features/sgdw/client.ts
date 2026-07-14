@@ -333,6 +333,58 @@ export async function buscarKpiCaixaSgdw(config: SgdwConfig, filtros: CaixaFiltr
   return { totalReceber: Number(row.TR ?? 0), totalRecebido: Number(row.TRE ?? 0), totalPagar: Number(row.TP ?? 0), totalPago: Number(row.TPO ?? 0) };
 }
 
+// ─── Empresas / Frotas ────────────────────────────────────────────────────────
+
+export const SGDW_EMPRESAS_POR_PAGINA = 18;
+
+export async function buscarEmpresasSgdw(
+  config: SgdwConfig, pagina: number, busca = ""
+): Promise<SgdwPaginaDados> {
+  const skip = pagina * SGDW_EMPRESAS_POR_PAGINA;
+  const wh = busca ? `WHERE TRIM(c.CLINOMES) CONTAINING '${esc(busca)}'` : "";
+  const inner = `FROM TBCLIEN c
+    INNER JOIN TBORDSE o ON o.ORDORIGE = c.CLINUMER AND COALESCE(o.ORDCANC, 0) = 0
+    ${wh} GROUP BY c.CLINUMER, c.CLINOMES
+    HAVING COUNT(DISTINCT o.VEINUMER) >= 2`;
+  const sql = `SELECT FIRST ${SGDW_EMPRESAS_POR_PAGINA} SKIP ${skip}
+    c.CLINUMER, TRIM(c.CLINOMES) AS NOME,
+    COUNT(DISTINCT o.VEINUMER) AS QTD_VEICULOS,
+    COUNT(o.ORDNUMER) AS QTD_OS,
+    SUM(COALESCE(o.ORDVLTOT, 0)) AS TOTAL_HON,
+    SUM(COALESCE(o.ORDVLREC, 0)) AS TOTAL_REC,
+    MAX(o.ORDDTEMI) AS ULTIMA_OS
+  ${inner} ORDER BY COUNT(DISTINCT o.VEINUMER) DESC, COUNT(o.ORDNUMER) DESC`;
+  const sqlN = `SELECT COUNT(*) AS TOTAL FROM (
+    SELECT c.CLINUMER FROM TBCLIEN c
+    INNER JOIN TBORDSE o ON o.ORDORIGE = c.CLINUMER AND COALESCE(o.ORDCANC, 0) = 0
+    ${wh} GROUP BY c.CLINUMER HAVING COUNT(DISTINCT o.VEINUMER) >= 2
+  ) TMP_E`;
+  const [r, n] = await Promise.all([
+    sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", { sql }),
+    sgdwPost<{ rows: [{ TOTAL: number }] }>(config, "/api/sgdw-query", { sql: sqlN }),
+  ]);
+  return { linhas: r.rows, total: Number(n.rows[0]?.TOTAL ?? 0) };
+}
+
+export async function buscarVeiculosEmpresaSgdw(
+  config: SgdwConfig, clinumer: number
+): Promise<SgdwPaginaDados> {
+  const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", {
+    sql: `SELECT v.VEINUMER, TRIM(v.VEIPLACA) AS PLACA, TRIM(v.VEIRENAV) AS RENAVAM,
+      COUNT(o.ORDNUMER) AS QTD_OS,
+      MAX(o.ORDDTEMI) AS ULTIMA_OS,
+      SUM(COALESCE(o.ORDVLTOT, 0)) AS TOTAL_HON,
+      SUM(COALESCE(o.ORDVLREC, 0)) AS TOTAL_REC
+    FROM TBORDSE o
+    JOIN TBVEICU v ON v.VEINUMER = o.VEINUMER
+    WHERE o.ORDORIGE = ? AND COALESCE(o.ORDCANC, 0) = 0
+    GROUP BY v.VEINUMER, v.VEIPLACA, v.VEIRENAV
+    ORDER BY COUNT(o.ORDNUMER) DESC`,
+    params: [clinumer],
+  });
+  return { linhas: r.rows, total: r.rows.length };
+}
+
 // ─── Funcionários ─────────────────────────────────────────────────────────────
 
 export async function buscarFuncionariosSgdw(config: SgdwConfig): Promise<SgdwPaginaDados> {

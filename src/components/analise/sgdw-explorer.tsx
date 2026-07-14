@@ -3,10 +3,11 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, Search, X, AlertTriangle, CheckCircle } from "lucide-react";
 import {
-  buscarCaixaSgdw, buscarClientesSgdw, buscarDadosTabelaSgdw, buscarEsquemaTiposSgdw,
-  buscarFuncionariosSgdw, buscarKpiCaixaSgdw, buscarKpiOsSgdw, buscarOsSgdw,
-  buscarServicosSgdw, buscarVeiculosSgdw, cancelarOsSgdw, listarTabelasSgdw,
-  reativarOsSgdw, SGDW_POR_PAGINA,
+  buscarCaixaSgdw, buscarClientesSgdw, buscarDadosTabelaSgdw, buscarEmpresasSgdw,
+  buscarEsquemaTiposSgdw, buscarFuncionariosSgdw, buscarKpiCaixaSgdw, buscarKpiOsSgdw,
+  buscarOsSgdw, buscarServicosSgdw, buscarVeiculosEmpresaSgdw, buscarVeiculosSgdw,
+  cancelarOsSgdw, listarTabelasSgdw, reativarOsSgdw,
+  SGDW_EMPRESAS_POR_PAGINA, SGDW_POR_PAGINA,
 } from "@/src/features/sgdw/client";
 import type {
   CaixaFiltros, OsFiltros, SgdwCaixaKpi, SgdwConfig,
@@ -27,7 +28,7 @@ type Notif = { tipo: "ok" | "erro"; msg: string };
 
 // ─── Column definitions ───────────────────────────────────────────────────────
 
-const COLS: Record<Exclude<SgdwExplorerAba, "schema">, ColDef[]> = {
+const COLS: Record<Exclude<SgdwExplorerAba, "schema" | "empresas">, ColDef[]> = {
   os: [
     { key: "ORDNUMER",   label: "Nro",           w: 68 },
     { key: "DATA",       label: "Data",           format: "data",   w: 88 },
@@ -79,13 +80,14 @@ const COLS: Record<Exclude<SgdwExplorerAba, "schema">, ColDef[]> = {
 };
 
 const ABAS: Array<{ id: SgdwExplorerAba; label: string; emoji: string }> = [
-  { id: "os",           label: "Ordens de Servico", emoji: "📋" },
-  { id: "clientes",     label: "Clientes",           emoji: "👤" },
-  { id: "veiculos",     label: "Veiculos",           emoji: "🚗" },
-  { id: "servicos",     label: "Servicos",           emoji: "⚙️" },
-  { id: "caixa",        label: "Caixa / Financeiro", emoji: "💰" },
-  { id: "funcionarios", label: "Funcionarios",       emoji: "👥" },
-  { id: "schema",       label: "Banco / Tabelas",    emoji: "🗄️" },
+  { id: "os",           label: "Ordens de Servico",  emoji: "📋" },
+  { id: "clientes",     label: "Clientes",            emoji: "👤" },
+  { id: "empresas",     label: "Empresas / Frotas",   emoji: "🏢" },
+  { id: "veiculos",     label: "Veiculos",            emoji: "🚗" },
+  { id: "servicos",     label: "Servicos",            emoji: "⚙️" },
+  { id: "caixa",        label: "Caixa / Financeiro",  emoji: "💰" },
+  { id: "funcionarios", label: "Funcionarios",        emoji: "👥" },
+  { id: "schema",       label: "Banco / Tabelas",     emoji: "🗄️" },
 ];
 
 const HAS_SEARCH: Partial<Record<SgdwExplorerAba, boolean>> = { os: true, clientes: true, veiculos: true, caixa: true };
@@ -505,6 +507,379 @@ function SchemaTab({ config, tabelas, tabelasLoading }: { config: SgdwConfig; ta
   );
 }
 
+// ─── Tier / RPG System ───────────────────────────────────────────────────────
+
+type Tier = { nivel: number; nome: string; cor: string; bg: string; borda: string; emoji: string; min: number; max: number };
+
+const TIERS: Tier[] = [
+  { nivel: 1, nome: "Iniciante", cor: "#6b7280", bg: "#f9fafb", borda: "#d1d5db", emoji: "⭐", min: 1,  max: 1  },
+  { nivel: 2, nome: "Bronze",    cor: "#92400e", bg: "#fef9f0", borda: "#d97706", emoji: "🥉", min: 2,  max: 4  },
+  { nivel: 3, nome: "Prata",     cor: "#374151", bg: "#f8f9fa", borda: "#9ca3af", emoji: "🥈", min: 5,  max: 9  },
+  { nivel: 4, nome: "Ouro",      cor: "#b45309", bg: "#fffbeb", borda: "#f59e0b", emoji: "🏆", min: 10, max: 19 },
+  { nivel: 5, nome: "Elite",     cor: "#6d28d9", bg: "#f5f3ff", borda: "#8b5cf6", emoji: "💎", min: 20, max: 999 },
+];
+
+function getTier(qtdVeiculos: number): Tier {
+  for (let i = TIERS.length - 1; i >= 0; i--) {
+    if (qtdVeiculos >= TIERS[i].min) return TIERS[i];
+  }
+  return TIERS[0];
+}
+
+function getXp(qtdVeiculos: number, qtdOs: number, totalHon: number): number {
+  return qtdVeiculos * 100 + qtdOs * 5 + Math.floor(totalHon / 500);
+}
+
+function getProgressoProximoNivel(qtdVeiculos: number, tier: Tier): { pct: number; faltam: number; proximoNome: string } {
+  if (tier.nivel === 5) return { pct: 100, faltam: 0, proximoNome: "" };
+  const proximo = TIERS[tier.nivel]; // tier.nivel é 1-based; próximo está em index tier.nivel
+  const range = proximo.min - tier.min;
+  const progresso = qtdVeiculos - tier.min;
+  const pct = range > 0 ? Math.min(99, Math.round((progresso / range) * 100)) : 99;
+  return { pct, faltam: proximo.min - qtdVeiculos, proximoNome: proximo.nome };
+}
+
+// ─── Empresa Card ─────────────────────────────────────────────────────────────
+
+function EmpresaCard({ empresa, onClick }: { empresa: Record<string, unknown>; onClick: () => void }) {
+  const qtdVeiculos = Number(empresa.QTD_VEICULOS ?? 0);
+  const qtdOs = Number(empresa.QTD_OS ?? 0);
+  const totalHon = Number(empresa.TOTAL_HON ?? 0);
+  const totalRec = Number(empresa.TOTAL_REC ?? 0);
+  const saldo = totalHon - totalRec;
+  const tier = getTier(qtdVeiculos);
+  const { pct, faltam, proximoNome } = getProgressoProximoNivel(qtdVeiculos, tier);
+  const xp = getXp(qtdVeiculos, qtdOs, totalHon);
+  const ultimaOs = empresa.ULTIMA_OS ? fmtData(empresa.ULTIMA_OS) : "-";
+
+  return (
+    <div onClick={onClick} style={{
+      border: `1px solid ${tier.borda}`,
+      borderLeft: `5px solid ${tier.cor}`,
+      borderRadius: 10, padding: "13px 14px",
+      background: tier.bg, cursor: "pointer",
+      transition: "transform 0.1s, box-shadow 0.1s",
+      display: "flex", flexDirection: "column", gap: 8,
+    }}
+    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.1)"; (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; }}
+    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; (e.currentTarget as HTMLDivElement).style.transform = "none"; }}>
+
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#1a202c", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {String(empresa.NOME ?? "-")}
+          </div>
+          <div style={{ fontSize: "0.6rem", color: "#9ca3af" }}>Cod {String(empresa.CLINUMER ?? "")}</div>
+        </div>
+        <div style={{ textAlign: "center", marginLeft: 8, flexShrink: 0 }}>
+          <div style={{ fontSize: "1.3rem", lineHeight: 1 }}>{tier.emoji}</div>
+          <div style={{ fontSize: "0.57rem", fontWeight: 800, color: tier.cor, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            Nv.{tier.nivel} {tier.nome}
+          </div>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, textAlign: "center" }}>
+        <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: 6, padding: "5px 4px" }}>
+          <div style={{ fontSize: "1.05rem", fontWeight: 800, color: tier.cor }}>{qtdVeiculos}</div>
+          <div style={{ fontSize: "0.58rem", color: "#6b7280" }}>veiculos</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: 6, padding: "5px 4px" }}>
+          <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#1a5c34" }}>{qtdOs}</div>
+          <div style={{ fontSize: "0.58rem", color: "#6b7280" }}>OS</div>
+        </div>
+        <div style={{ background: "rgba(255,255,255,0.7)", borderRadius: 6, padding: "5px 4px" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 800, color: saldo > 0 ? "#c0392b" : "#1a5c34" }}>
+            {moeda.format(saldo)}
+          </div>
+          <div style={{ fontSize: "0.58rem", color: "#6b7280" }}>a receber</div>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+          <span style={{ fontSize: "0.58rem", color: "#9ca3af" }}>XP {xp.toLocaleString("pt-BR")}</span>
+          <span style={{ fontSize: "0.58rem", color: "#9ca3af" }}>
+            {tier.nivel < 5 ? `${faltam} veic. para ${proximoNome}` : "★ Frota Elite"}
+          </span>
+        </div>
+        <div style={{ background: "rgba(0,0,0,0.08)", borderRadius: 4, height: 5 }}>
+          <div style={{ background: tier.cor, width: `${pct}%`, height: "100%", borderRadius: 4, transition: "width 0.6s ease" }} />
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{ fontSize: "0.6rem", color: "#9ca3af", display: "flex", justifyContent: "space-between" }}>
+        <span>Tot: {moeda.format(totalHon)}</span>
+        <span>Ultima OS: {ultimaOs}</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Empresa Detalhe Modal ────────────────────────────────────────────────────
+
+function EmpresaDetalheModal({
+  empresa, veiculos, carregandoVeiculos, onClose,
+}: {
+  empresa: Record<string, unknown>;
+  veiculos: SgdwPaginaDados | null;
+  carregandoVeiculos: boolean;
+  onClose: () => void;
+}) {
+  const qtdVeiculos = Number(empresa.QTD_VEICULOS ?? 0);
+  const tier = getTier(qtdVeiculos);
+  const { pct, faltam, proximoNome } = getProgressoProximoNivel(qtdVeiculos, tier);
+  const totalHon = Number(empresa.TOTAL_HON ?? 0);
+  const totalRec = Number(empresa.TOTAL_REC ?? 0);
+  const xp = getXp(qtdVeiculos, Number(empresa.QTD_OS ?? 0), totalHon);
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: "#fff", borderRadius: 14, width: "100%", maxWidth: 740, maxHeight: "88vh", overflow: "auto", boxShadow: "0 12px 48px rgba(0,0,0,0.22)" }}>
+
+        {/* Modal header */}
+        <div style={{ background: tier.bg, borderBottom: `3px solid ${tier.cor}`, padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderRadius: "14px 14px 0 0" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+              <span style={{ fontSize: "1.5rem" }}>{tier.emoji}</span>
+              <div>
+                <div style={{ fontSize: "1rem", fontWeight: 800, color: "#1a202c" }}>{String(empresa.NOME ?? "-")}</div>
+                <div style={{ fontSize: "0.65rem", color: tier.cor, fontWeight: 700 }}>
+                  Nivel {tier.nivel} — Frota {tier.nome} · Cod {String(empresa.CLINUMER ?? "")}
+                </div>
+              </div>
+            </div>
+
+            {/* Stats row */}
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 10 }}>
+              {[
+                { l: "Veiculos", v: String(qtdVeiculos), c: tier.cor },
+                { l: "Ordens de Servico", v: String(empresa.QTD_OS ?? 0), c: "#1a5c34" },
+                { l: "Honorarios", v: moeda.format(totalHon), c: "#1a5c34" },
+                { l: "Recebido", v: moeda.format(totalRec), c: "#1a5c34" },
+                { l: "A Receber", v: moeda.format(totalHon - totalRec), c: totalHon - totalRec > 0 ? "#c0392b" : "#1a5c34" },
+                { l: "XP Total", v: xp.toLocaleString("pt-BR"), c: tier.cor },
+              ].map(s => (
+                <div key={s.l}>
+                  <div style={{ fontSize: "0.58rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em" }}>{s.l}</div>
+                  <div style={{ fontSize: "0.88rem", fontWeight: 800, color: s.c }}>{s.v}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Progress bar */}
+            {tier.nivel < 5 && (
+              <div style={{ maxWidth: 340 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
+                  <span style={{ fontSize: "0.62rem", color: "#6b7280", fontWeight: 600 }}>{tier.nome}</span>
+                  <span style={{ fontSize: "0.62rem", color: "#6b7280" }}>{faltam} veic. para {proximoNome}</span>
+                </div>
+                <div style={{ background: "rgba(0,0,0,0.1)", borderRadius: 5, height: 7 }}>
+                  <div style={{ background: tier.cor, width: `${pct}%`, height: "100%", borderRadius: 5 }} />
+                </div>
+              </div>
+            )}
+            {tier.nivel === 5 && (
+              <div style={{ fontSize: "0.72rem", color: tier.cor, fontWeight: 700 }}>★ Nivel Maximo — Frota Elite</div>
+            )}
+          </div>
+          <button type="button" onClick={onClose}
+            style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #e5e7eb", background: "#fff", cursor: "pointer", color: "#6b7280", fontSize: "0.8rem", flexShrink: 0 }}>
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* Vehicle fleet */}
+        <div style={{ padding: "16px 22px" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#374151", marginBottom: 12 }}>
+            🚗 Frota de Veiculos ({qtdVeiculos})
+          </div>
+
+          {carregandoVeiculos && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#888", fontSize: "0.78rem", padding: "20px 0" }}>
+              <RefreshCw size={14} style={{ animation: "spin 1s linear infinite", color: "var(--accent)" }} /> Carregando frota...
+            </div>
+          )}
+
+          {veiculos && veiculos.linhas.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+              {veiculos.linhas.map((v, i) => {
+                const vQtdOs = Number(v.QTD_OS ?? 0);
+                const vHon = Number(v.TOTAL_HON ?? 0);
+                const vRec = Number(v.TOTAL_REC ?? 0);
+                const vTier = getTier(Math.max(1, Math.round(vQtdOs / 5)));
+                return (
+                  <div key={i} style={{ border: "1px solid #e5e7eb", borderRadius: 8, padding: "10px 12px", background: "#fafafa" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                      <span style={{ fontSize: "0.82rem", fontWeight: 800, color: "#1a202c", letterSpacing: "0.06em" }}>
+                        {String(v.PLACA ?? "-")}
+                      </span>
+                      <span style={{ fontSize: "0.65rem", fontWeight: 700, color: "#fff", background: vTier.cor, padding: "1px 6px", borderRadius: 4 }}>
+                        {vQtdOs} OS
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.62rem", color: "#6b7280", marginBottom: 6, fontFamily: "monospace" }}>
+                      {String(v.RENAVAM ?? "-")}
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.65rem" }}>
+                      <span style={{ color: "#1a5c34", fontWeight: 700 }}>{moeda.format(vHon)}</span>
+                      <span style={{ color: vHon - vRec > 0 ? "#c0392b" : "#888" }}>
+                        {vHon - vRec > 0 ? `${moeda.format(vHon - vRec)} a rec.` : "Quitado"}
+                      </span>
+                    </div>
+                    {!!v.ULTIMA_OS && (
+                      <div style={{ fontSize: "0.58rem", color: "#9ca3af", marginTop: 4 }}>
+                        Ult. OS: {fmtData(v.ULTIMA_OS as string)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {veiculos && veiculos.linhas.length === 0 && !carregandoVeiculos && (
+            <p style={{ fontSize: "0.75rem", color: "#888" }}>Nenhum veiculo encontrado.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Empresas Tab ─────────────────────────────────────────────────────────────
+
+function EmpresasTab({ config }: { config: SgdwConfig }) {
+  const [busca, setBusca]               = useState("");
+  const [buscaInput, setBuscaInput]     = useState("");
+  const [pagina, setPagina]             = useState(0);
+  const [dados, setDados]               = useState<SgdwPaginaDados | null>(null);
+  const [carregando, setCarregando]     = useState(false);
+  const [erro, setErro]                 = useState<string | null>(null);
+  const [empresaSel, setEmpresaSel]     = useState<Record<string, unknown> | null>(null);
+  const [veiculos, setVeiculos]         = useState<SgdwPaginaDados | null>(null);
+  const [carregVeic, setCarregVeic]     = useState(false);
+  const montado = useRef(true);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true); setErro(null);
+    try {
+      const r = await buscarEmpresasSgdw(config, pagina, busca);
+      if (montado.current) setDados(r);
+    } catch (e) {
+      if (montado.current) setErro(e instanceof Error ? e.message : "Erro");
+    } finally {
+      if (montado.current) setCarregando(false);
+    }
+  }, [config, pagina, busca]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  async function abrirEmpresa(empresa: Record<string, unknown>) {
+    setEmpresaSel(empresa);
+    setVeiculos(null);
+    setCarregVeic(true);
+    try {
+      const r = await buscarVeiculosEmpresaSgdw(config, Number(empresa.CLINUMER));
+      if (montado.current) setVeiculos(r);
+    } catch { /* ignore */ } finally {
+      if (montado.current) setCarregVeic(false);
+    }
+  }
+
+  const total = dados?.total ?? 0;
+  const totalPag = Math.ceil(total / SGDW_EMPRESAS_POR_PAGINA);
+
+  return (
+    <div>
+      {/* Search toolbar */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
+        <form onSubmit={e => { e.preventDefault(); setPagina(0); setBusca(buscaInput); }} style={{ display: "flex", gap: 6, flex: 1, minWidth: 200 }}>
+          <input value={buscaInput} onChange={e => setBuscaInput(e.target.value)}
+            placeholder="Buscar empresa pelo nome..."
+            style={{ flex: 1, padding: "5px 10px", borderRadius: 7, border: "1px solid #d0ddd6", fontSize: "0.75rem" }} />
+          <button type="submit" style={{ padding: "5px 11px", borderRadius: 7, background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem" }}>
+            <Search size={12} /> Buscar
+          </button>
+          {busca && <button type="button" onClick={() => { setBusca(""); setBuscaInput(""); setPagina(0); }} style={{ padding: "5px 10px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", fontSize: "0.73rem" }}>Limpar</button>}
+        </form>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {dados && <span style={{ fontSize: "0.68rem", color: "#7a9a84" }}>{total} empresas com frota</span>}
+          <button type="button" onClick={carregar} disabled={carregando}
+            style={{ padding: "5px 11px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", opacity: carregando ? 0.6 : 1 }}>
+            <RefreshCw size={11} style={{ animation: carregando ? "spin 1s linear infinite" : "none" }} /> Atualizar
+          </button>
+        </div>
+      </div>
+
+      {/* Tier legend */}
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
+        {TIERS.map(t => (
+          <span key={t.nivel} style={{ fontSize: "0.62rem", fontWeight: 700, padding: "2px 8px", borderRadius: 20, background: t.bg, color: t.cor, border: `1px solid ${t.borda}` }}>
+            {t.emoji} {t.nome} ({t.nivel < 5 ? `${t.min}–${t.max}` : `${t.min}+`} veic.)
+          </span>
+        ))}
+      </div>
+
+      {/* Loading */}
+      {carregando && !dados && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "28px 0", color: "#888", fontSize: "0.78rem" }}>
+          <RefreshCw size={14} style={{ animation: "spin 1s linear infinite", color: "var(--accent)" }} /> Buscando empresas com frota...
+        </div>
+      )}
+
+      {/* Error */}
+      {erro && <div style={{ background: "#fdf3f2", border: "1px solid #f0c0bc", borderRadius: 8, padding: "10px 14px", fontSize: "0.75rem", color: "#c0392b", marginBottom: 10, whiteSpace: "pre-wrap" }}>{erro}</div>}
+
+      {/* Card grid */}
+      {dados && dados.linhas.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(255px, 1fr))", gap: 12 }}>
+          {dados.linhas.map((empresa, i) => (
+            <EmpresaCard key={i} empresa={empresa} onClick={() => abrirEmpresa(empresa)} />
+          ))}
+        </div>
+      )}
+
+      {dados && dados.linhas.length === 0 && !carregando && (
+        <div style={{ textAlign: "center", padding: "28px 0", color: "#888", fontSize: "0.78rem" }}>
+          Nenhuma empresa com frota (2+ veiculos) encontrada.
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPag > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginTop: 16 }}>
+          <button type="button" disabled={pagina === 0 || carregando} onClick={() => setPagina(p => p - 1)}
+            style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #d0ddd6", background: "#f0f5f2", cursor: pagina === 0 ? "not-allowed" : "pointer", opacity: pagina === 0 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem", fontWeight: 600 }}>
+            <ChevronLeft size={13} /> Anterior
+          </button>
+          <span style={{ fontSize: "0.73rem", color: "#666" }}>{pagina + 1} / {totalPag}</span>
+          <button type="button" disabled={pagina >= totalPag - 1 || carregando} onClick={() => setPagina(p => p + 1)}
+            style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #d0ddd6", background: "#f0f5f2", cursor: pagina >= totalPag - 1 ? "not-allowed" : "pointer", opacity: pagina >= totalPag - 1 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem", fontWeight: 600 }}>
+            Proximo <ChevronRight size={13} />
+          </button>
+        </div>
+      )}
+
+      {/* Detail modal */}
+      {empresaSel && (
+        <EmpresaDetalheModal
+          empresa={empresaSel}
+          veiculos={veiculos}
+          carregandoVeiculos={carregVeic}
+          onClose={() => { setEmpresaSel(null); setVeiculos(null); }}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── Main Explorer ────────────────────────────────────────────────────────────
 
 export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
@@ -546,7 +921,7 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
   }
 
   const fetchDados = useCallback(async () => {
-    if (aba === "schema") return;
+    if (aba === "schema" || aba === "empresas") return;
     setCarregando(true); setErro(null);
     try {
       let r: SgdwPaginaDados;
@@ -630,7 +1005,7 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
   }
 
   const total = dados?.total ?? 0;
-  const cols = aba !== "schema" ? COLS[aba] : [];
+  const cols = (aba !== "schema" && aba !== "empresas") ? COLS[aba as Exclude<SgdwExplorerAba, "schema" | "empresas">] : [];
 
   // OS KPI cards
   const osKpiCards = osKpi ? [
@@ -691,6 +1066,8 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
       <div style={{ border: "1px solid #d8e8d8", borderTop: "none", borderRadius: "0 0 10px 10px", background: "#fff", padding: "14px 16px", minHeight: 140 }}>
         {aba === "schema" ? (
           <SchemaTab config={config} tabelas={tabelas} tabelasLoading={tabelasLoading} />
+        ) : aba === "empresas" ? (
+          <EmpresasTab config={config} />
         ) : (
           <>
             {/* KPI bar */}

@@ -45,7 +45,7 @@ export type SgdwDados = {
 };
 
 export type SgdwExplorerAba =
-  | "os" | "clientes" | "veiculos" | "servicos"
+  | "os" | "clientes" | "empresas" | "veiculos" | "servicos"
   | "caixa" | "funcionarios" | "schema";
 
 export type SgdwPaginaDados = {
