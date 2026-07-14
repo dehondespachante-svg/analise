@@ -52,28 +52,27 @@ async function callTunnel(base: string, body: unknown): Promise<Response> {
   });
 }
 
-function errorTunnel(status: number, base: string): NextResponse {
+function errorTunnel(status: number, base: string, body = ""): NextResponse {
   const host = base.replace(/^https?:\/\//, "").split("/")[0];
+  // Extrai mensagem de erro do JSON do localApi.js, se houver
+  let detalhe = "";
+  if (body) {
+    try {
+      const parsed = JSON.parse(body) as { error?: string; message?: string };
+      detalhe = (parsed.error ?? parsed.message ?? "").slice(0, 300);
+    } catch {
+      detalhe = body.slice(0, 300);
+    }
+  }
   if (status === 404) {
-    // Cloudflare retorna 404 quando o processo cloudflared parou
     return NextResponse.json(
-      {
-        error:
-          `Tunnel expirou (${host}).\n` +
-          "O cloudflared parou apos registrar a URL.\n" +
-          "Solucao: reinicie o iniciar.bat no servidor SGDW.",
-      },
+      { error: `Tunnel expirou (${host}).\nO cloudflared parou apos registrar a URL.\nSolucao: reinicie o iniciar.bat no servidor SGDW.` },
       { status: 503 }
     );
   }
   if (status === 502 || status === 504) {
-    // Tunnel OK mas localApi.js nao responde em localhost:8787
     return NextResponse.json(
-      {
-        error:
-          `Tunnel ativo mas API local sem resposta (HTTP ${status}).\n` +
-          "Verifique: logs\\local-api.log no servidor SGDW.",
-      },
+      { error: `Tunnel ativo mas API local sem resposta (HTTP ${status}).\nVerifique: logs\\local-api.log no servidor SGDW.` },
       { status: 503 }
     );
   }
@@ -83,8 +82,14 @@ function errorTunnel(status: number, base: string): NextResponse {
       { status: 503 }
     );
   }
+  if (status === 500) {
+    return NextResponse.json(
+      { error: `Erro SQL no servidor SGDW (HTTP 500)${detalhe ? ":\n" + detalhe : ".\nVerifique os logs do servidor."}` },
+      { status: 503 }
+    );
+  }
   return NextResponse.json(
-    { error: `SGDW retornou HTTP ${status}.` },
+    { error: `SGDW retornou HTTP ${status}.${detalhe ? "\n" + detalhe : ""}` },
     { status: 503 }
   );
 }
@@ -136,6 +141,8 @@ export async function POST(request: Request) {
 
   // ── 4. Erro do tunnel (4xx/5xx) → tenta URL fresca do RTDB ─────────────────
   const firstStatus = r.status;
+  // Lê o corpo do erro antes de descartar a resposta — útil para erros SQL (500)
+  const firstBody = await r.text().catch(() => "");
   urlCache = null; // descarta cache imediatamente
 
   const freshUrl = await fetchFromRtdb();
@@ -152,7 +159,8 @@ export async function POST(request: Request) {
           { status: 401 }
         );
       }
-      return errorTunnel(r2.status, freshUrl);
+      const b2 = await r2.text().catch(() => "");
+      return errorTunnel(r2.status, freshUrl, b2);
     } catch {
       urlCache = null;
       return NextResponse.json(
@@ -163,7 +171,7 @@ export async function POST(request: Request) {
   }
 
   // URL do RTDB é a mesma (ou RTDB está vazio) — devolve erro específico
-  return errorTunnel(firstStatus, base);
+  return errorTunnel(firstStatus, base, firstBody);
 }
 
 export async function GET() {

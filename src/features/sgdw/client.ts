@@ -184,8 +184,7 @@ export async function buscarOsSgdw(
   const joins = `FROM TBORDSE o
     LEFT JOIN TBCLIEN c ON c.CLINUMER = o.ORDORIGE
     LEFT JOIN TBVEICU v ON v.VEINUMER = o.VEINUMER
-    LEFT JOIN TBSERVI s ON s.SERNUMER = o.SOSNUMER
-    LEFT JOIN TBUSUARI u ON u.USUNUMER = o.USUNUMER`;
+    LEFT JOIN TBSERVI s ON s.SERNUMER = o.SOSNUMER`;
   const sql = `SELECT FIRST ${SGDW_POR_PAGINA} SKIP ${skip}
     o.ORDNUMER, o.ORDDTEMI AS DATA,
     COALESCE(TRIM(c.CLINOMES), '-') AS CLIENTE,
@@ -194,7 +193,6 @@ export async function buscarOsSgdw(
     COALESCE(o.ORDVLTOT, 0) AS HONORARIOS,
     COALESCE(o.ORDVLREC, 0) AS RECEBIDO,
     COALESCE(o.ORDVLTOT, 0) - COALESCE(o.ORDVLREC, 0) AS SALDO,
-    COALESCE(TRIM(u.USUNOMES), '-') AS FUNCIONARIO,
     COALESCE(o.ORDCANC, 0) AS CANCELADO
   ${joins} ${where} ORDER BY o.ORDNUMER DESC`;
   const sqlN = `SELECT COUNT(*) AS TOTAL FROM TBORDSE o
@@ -339,13 +337,7 @@ export async function buscarKpiCaixaSgdw(config: SgdwConfig, filtros: CaixaFiltr
 
 export async function buscarFuncionariosSgdw(config: SgdwConfig): Promise<SgdwPaginaDados> {
   const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", {
-    sql: `SELECT u.USUNUMER, TRIM(u.USUNOMES) AS NOME,
-      COUNT(o.ORDNUMER) AS QTD_OS,
-      SUM(COALESCE(o.ORDVLTOT, 0)) AS TOTAL_HON,
-      SUM(COALESCE(o.ORDVLREC, 0)) AS TOTAL_REC
-    FROM TBUSUARI u
-    LEFT JOIN TBORDSE o ON o.USUNUMER = u.USUNUMER AND COALESCE(o.ORDCANC, 0) = 0
-    GROUP BY u.USUNUMER, u.USUNOMES ORDER BY u.USUNOMES`,
+    sql: `SELECT USUNUMER, TRIM(USUNOMES) AS NOME FROM TBUSUARI ORDER BY USUNOMES`,
   });
   return { linhas: r.rows, total: r.rows.length };
 }

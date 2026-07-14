@@ -37,7 +37,6 @@ const COLS: Record<Exclude<SgdwExplorerAba, "schema">, ColDef[]> = {
     { key: "HONORARIOS", label: "Honorarios",    format: "moeda",  align: "right", w: 105 },
     { key: "RECEBIDO",   label: "Recebido",      format: "moeda",  align: "right", w: 105 },
     { key: "SALDO",      label: "A Receber",     format: "saldo",  align: "right", w: 100 },
-    { key: "FUNCIONARIO",label: "Funcionario",   w: 110 },
     { key: "CANCELADO",  label: "Canc",          format: "bool",   align: "center", w: 42 },
   ],
   clientes: [
@@ -74,11 +73,8 @@ const COLS: Record<Exclude<SgdwExplorerAba, "schema">, ColDef[]> = {
     { key: "ORIGEM",     label: "Cliente" },
   ],
   funcionarios: [
-    { key: "USUNUMER",  label: "Cod",         w: 58 },
-    { key: "NOME",      label: "Nome" },
-    { key: "QTD_OS",    label: "OS",          align: "right", w: 60 },
-    { key: "TOTAL_HON", label: "Honorarios", format: "moeda", align: "right", w: 110 },
-    { key: "TOTAL_REC", label: "Recebido",   format: "moeda", align: "right", w: 110 },
+    { key: "USUNUMER", label: "Codigo", w: 70 },
+    { key: "NOME",     label: "Nome" },
   ],
 };
 
