@@ -1120,22 +1120,16 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
 
       <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
         <div style={{
-          background: "linear-gradient(180deg, #fcfcfc 0%, #f0f0f0 100%)",
-          border: "2.5px solid #1a3a9a", borderRadius: 5, overflow: "hidden",
-          boxShadow: "0 3px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.8)",
-          display: "flex", alignItems: "stretch",
+          background: "linear-gradient(180deg, #0e1a2e 0%, #0a1220 100%)",
+          border: `1.5px solid ${cor}66`, borderRadius: 7,
+          boxShadow: `0 2px 12px rgba(0,0,0,0.7), 0 0 8px ${cor}22`,
+          padding: "5px 16px", textAlign: "center",
         }}>
-          <div style={{ background: "linear-gradient(180deg, #1a3aaa, #0f2880)", padding: "3px 5px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minWidth: 28 }}>
-            <span style={{ fontSize: "0.55rem", color: "#ffe" }}>&#x1F1E7;&#x1F1F7;</span>
-            <span style={{ fontSize: "0.38rem", fontWeight: 800, color: "#dde", letterSpacing: "0.05em", lineHeight: 1.2 }}>BRASIL</span>
+          <div style={{ fontSize: "0.36rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 2 }}>
+            {isMercosul ? "MERCOSUL" : "BRASIL"}
           </div>
-          <div style={{ padding: "5px 14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            {isMercosul && (
-              <div style={{ fontSize: "0.38rem", color: "#1a3a9a", fontWeight: 700, letterSpacing: "0.15em", lineHeight: 1, marginBottom: 1 }}>MERCOSUL</div>
-            )}
-            <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#0a0a0a", letterSpacing: "0.2em", fontFamily: "'Courier New', monospace", lineHeight: 1 }}>
-              {placa}
-            </div>
+          <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#ffffff", letterSpacing: "0.22em", fontFamily: "'Courier New', monospace", lineHeight: 1, textShadow: `0 0 10px ${cor}88` }}>
+            {placa}
           </div>
         </div>
       </div>
