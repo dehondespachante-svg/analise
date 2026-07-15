@@ -957,6 +957,332 @@ function EmpresasTab({ config }: { config: SgdwConfig }) {
   );
 }
 
+// ─── Veículo Card ─────────────────────────────────────────────────────────────
+
+function CarSvg({ uid, cor }: { uid: string; cor: string }) {
+  const b = `${uid}_b`; const g = `${uid}_g`; const w = `${uid}_w`; const r = `${uid}_r`; const hl = `${uid}_hl`;
+  return (
+    <svg viewBox="0 0 220 96" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ width: "100%", filter: `drop-shadow(0 6px 18px ${cor}55)` }}>
+      <defs>
+        <linearGradient id={b} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={cor} stopOpacity="0.9"/>
+          <stop offset="50%" stopColor={cor} stopOpacity="0.7"/>
+          <stop offset="100%" stopColor="#1a2030" stopOpacity="0.9"/>
+        </linearGradient>
+        <linearGradient id={g} x1="0.1" y1="0" x2="0.3" y2="1">
+          <stop offset="0%" stopColor="#90c8e8" stopOpacity="0.92"/>
+          <stop offset="100%" stopColor="#3870a0" stopOpacity="0.75"/>
+        </linearGradient>
+        <radialGradient id={w} cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#505868"/>
+          <stop offset="55%" stopColor="#303848"/>
+          <stop offset="100%" stopColor="#181e28"/>
+        </radialGradient>
+        <radialGradient id={r} cx="50%" cy="50%">
+          <stop offset="0%" stopColor="#d0d8e8"/>
+          <stop offset="50%" stopColor="#9098b0"/>
+          <stop offset="100%" stopColor="#505868"/>
+        </radialGradient>
+        <linearGradient id={hl} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="white" stopOpacity="0.28"/>
+          <stop offset="100%" stopColor="white" stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+
+      {/* Ground shadow */}
+      <ellipse cx="110" cy="92" rx="92" ry="5" fill="rgba(0,0,0,0.35)"/>
+
+      {/* Main body */}
+      <path d="M 10,74 L 10,58 Q 16,44 34,36 L 62,22 Q 78,14 96,13 L 134,13 Q 154,13 170,23 L 192,38 Q 206,48 210,58 L 210,74 Z"
+        fill={`url(#${b})`}/>
+
+      {/* Wheel arch cutouts */}
+      <path d="M 28,74 A 29,29 0 0 1 88,74" fill="#0a1020"/>
+      <path d="M 132,74 A 29,29 0 0 1 192,74" fill="#0a1020"/>
+
+      {/* Greenhouse / windows */}
+      <path d="M 64,22 Q 82,10 96,9 L 134,9 Q 152,9 168,22 L 164,42 L 66,42 Z"
+        fill={`url(#${g})`}/>
+
+      {/* Window glare */}
+      <path d="M 70,11 Q 100,7 140,10 L 138,20 Q 105,16 74,20 Z"
+        fill="rgba(255,255,255,0.18)"/>
+
+      {/* B-pillar */}
+      <line x1="120" y1="9" x2="118" y2="42" stroke="#253040" strokeWidth="3"/>
+
+      {/* Door lines */}
+      <path d="M 66,42 L 62,74" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" fill="none"/>
+      <path d="M 164,42 L 168,74" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" fill="none"/>
+
+      {/* Body highlight stripe */}
+      <path d="M 12,58 Q 110,50 208,58" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5" fill="none"/>
+
+      {/* Roof highlight */}
+      <path d="M 70,9 Q 110,5 158,9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+
+      {/* Hood line */}
+      <path d="M 168,23 Q 188,34 208,56" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none"/>
+
+      {/* Headlight */}
+      <path d="M 196,40 L 208,37 L 210,50 L 196,52 Z" fill="#ffe090" opacity="0.95"/>
+      <path d="M 198,42 L 207,39 L 208,48 L 198,50 Z" fill="white" opacity="0.5"/>
+      {/* Headlight beam */}
+      <path d="M 210,40 L 222,34 L 224,44 L 210,48 Z" fill="#ffe090" opacity="0.18"/>
+
+      {/* Taillight */}
+      <path d="M 10,42 L 16,40 L 16,54 L 10,54 Z" fill="#ff3333" opacity="0.9"/>
+      <path d="M 11,44 L 15,42 L 15,52 L 11,52 Z" fill="#ff8888" opacity="0.55"/>
+
+      {/* Front grille */}
+      <path d="M 200,58 Q 210,58 210,66 L 204,70 L 196,68 L 196,62 Z" fill="#1a2030"/>
+      <line x1="198" y1="61" x2="209" y2="61" stroke="#304050" strokeWidth="1"/>
+      <line x1="198" y1="64" x2="209" y2="64" stroke="#304050" strokeWidth="1"/>
+      <line x1="198" y1="67" x2="208" y2="67" stroke="#304050" strokeWidth="1"/>
+
+      {/* Rear bumper exhaust */}
+      <ellipse cx="22" cy="73" rx="5" ry="3" fill="#1a2030"/>
+      <ellipse cx="22" cy="73" rx="2.5" ry="1.5" fill="#0a1020"/>
+
+      {/* Front bumper accent */}
+      <path d="M 193,68 Q 211,68 211,74 L 193,74 Z" fill="rgba(255,255,255,0.07)"/>
+      <path d="M 10,68 Q 28,68 28,74 L 10,74 Z" fill="rgba(255,255,255,0.07)"/>
+
+      {/* Body highlight top panel */}
+      <path d="M 10,58 Q 110,44 210,58 L 210,50 Q 110,36 10,50 Z" fill={`url(#${hl})`}/>
+
+      {/* REAR WHEEL */}
+      <circle cx="58" cy="76" r="22" fill={`url(#${w})`}/>
+      <circle cx="58" cy="76" r="15" fill={`url(#${r})`}/>
+      <circle cx="58" cy="76" r="6" fill="#2a3040"/>
+      <circle cx="58" cy="76" r="3" fill="#c0c8d8"/>
+      <line x1="58" y1="61" x2="58" y2="91" stroke="#40485a" strokeWidth="2.5"/>
+      <line x1="43" y1="76" x2="73" y2="76" stroke="#40485a" strokeWidth="2.5"/>
+      <line x1="47.5" y1="65.5" x2="68.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
+      <line x1="68.5" y1="65.5" x2="47.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
+
+      {/* FRONT WHEEL */}
+      <circle cx="162" cy="76" r="22" fill={`url(#${w})`}/>
+      <circle cx="162" cy="76" r="15" fill={`url(#${r})`}/>
+      <circle cx="162" cy="76" r="6" fill="#2a3040"/>
+      <circle cx="162" cy="76" r="3" fill="#c0c8d8"/>
+      <line x1="162" y1="61" x2="162" y2="91" stroke="#40485a" strokeWidth="2.5"/>
+      <line x1="147" y1="76" x2="177" y2="76" stroke="#40485a" strokeWidth="2.5"/>
+      <line x1="151.5" y1="65.5" x2="172.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
+      <line x1="172.5" y1="65.5" x2="151.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+const CAR_CORES = ["#6888c8", "#c87848", "#48a878", "#a868c8", "#c8b840", "#48a8c8", "#c84858", "#68b8a0"];
+
+function VeiculoCard({ veiculo, expanded, onToggle }: {
+  veiculo: Record<string, unknown>; expanded: boolean; onToggle: () => void;
+}) {
+  const veinumer = Number(veiculo.VEINUMER ?? 0);
+  const placa    = String(veiculo.PLACA ?? "-").toUpperCase();
+  const renavam  = String(veiculo.RENAVAM ?? "-");
+  const qtdOs    = Number(veiculo.QTD_OS ?? 0);
+  const totalHon = Number(veiculo.TOTAL_HON ?? 0);
+  const ultimaOs = !!veiculo.ULTIMA_OS ? fmtData(veiculo.ULTIMA_OS as string) : "-";
+  const cor      = CAR_CORES[veinumer % CAR_CORES.length];
+  const uid      = `cv${veinumer}`;
+
+  // Mercosul or old plate format detect
+  const isMercosul = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(placa);
+
+  return (
+    <div onClick={onToggle} style={{
+      background: "linear-gradient(145deg, #0d1622 0%, #121e2e 60%, #0a1218 100%)",
+      borderRadius: 14, overflow: "hidden", cursor: "pointer",
+      border: expanded ? `1px solid ${cor}66` : "1px solid #1c2a3a",
+      boxShadow: expanded
+        ? `0 8px 28px rgba(0,0,0,0.6), 0 0 0 1px ${cor}44, inset 0 1px 0 rgba(255,255,255,0.05)`
+        : "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
+      transition: "box-shadow 0.2s, border-color 0.2s",
+    }}
+    onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLDivElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px ${cor}33`; }}
+    onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)"; }}>
+
+      {/* Car stage */}
+      <div style={{
+        padding: "18px 14px 10px",
+        background: `radial-gradient(ellipse at 50% 0%, ${cor}18 0%, transparent 70%)`,
+        position: "relative",
+      }}>
+        {/* Top accent line */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${cor}aa, transparent)` }}/>
+        <CarSvg uid={uid} cor={cor} />
+      </div>
+
+      {/* License plate */}
+      <div style={{ display: "flex", justifyContent: "center", paddingBottom: 10 }}>
+        <div style={{
+          background: "#f8f8f8",
+          border: "2px solid #1a40a0",
+          borderRadius: 4, padding: "3px 12px 3px 8px",
+          display: "flex", alignItems: "center", gap: 6,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+        }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid #1a40a0", paddingRight: 5, marginRight: 2 }}>
+            <span style={{ fontSize: "0.45rem", fontWeight: 900, color: "#1a1ac0", letterSpacing: "0.08em" }}>🇧🇷 BR</span>
+            <span style={{ fontSize: "0.38rem", color: "#5a5aaa", letterSpacing: "0.04em" }}>{isMercosul ? "MERCOSUL" : "BRASIL"}</span>
+          </div>
+          <span style={{ fontSize: "0.92rem", fontWeight: 900, color: "#111", letterSpacing: "0.18em", fontFamily: "monospace" }}>{placa}</span>
+        </div>
+      </div>
+
+      {/* HUD stats bar */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: "1px solid #1c2a3a" }}>
+        {[
+          { label: "OS", value: String(qtdOs), color: "#40d090" },
+          { label: "Honorarios", value: moeda.format(totalHon).replace("R$ ","R$ "), color: "#e8b840" },
+          { label: "Ultima OS", value: ultimaOs, color: "#60a8d8" },
+        ].map((s, i) => (
+          <div key={s.label} style={{
+            textAlign: "center", padding: "7px 4px",
+            borderRight: i < 2 ? "1px solid #1c2a3a" : "none",
+            background: "rgba(0,0,0,0.15)",
+          }}>
+            <div style={{ fontSize: i === 0 ? "1rem" : "0.65rem", fontWeight: 800, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
+            <div style={{ fontSize: "0.5rem", color: "#3a5870", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Expand toggle */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "5px 0", gap: 4, background: "rgba(0,0,0,0.2)" }}>
+        <span style={{ fontSize: "0.55rem", color: expanded ? cor : "#2a4a6a", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.2s" }}>
+          {expanded ? "▲ Fechar" : "▼ Ver Detalhes"}
+        </span>
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div style={{ padding: "12px 16px", background: "rgba(0,0,0,0.3)", borderTop: `1px solid ${cor}33` }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+            {[
+              { label: "Codigo", value: String(veinumer) },
+              { label: "RENAVAM", value: renavam },
+            ].map(f => (
+              <div key={f.label}>
+                <div style={{ fontSize: "0.52rem", color: "#3a5870", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>{f.label}</div>
+                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#88b0d0", fontFamily: "monospace", background: "rgba(0,0,0,0.3)", padding: "4px 7px", borderRadius: 5, border: "1px solid #1c2a3a" }}>
+                  {f.value}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: `linear-gradient(90deg, ${cor}22, transparent)`, borderLeft: `3px solid ${cor}`, padding: "6px 10px", borderRadius: "0 6px 6px 0" }}>
+            <div style={{ fontSize: "0.6rem", color: "#3a5870", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total acumulado</div>
+            <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#e8b840" }}>{moeda.format(totalHon)}</div>
+            <div style={{ fontSize: "0.58rem", color: "#4a7890", marginTop: 2 }}>em {qtdOs} ordens de servico</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Veículos Tab ─────────────────────────────────────────────────────────────
+
+function VeiculosTab({ config }: { config: SgdwConfig }) {
+  const [busca, setBusca]           = useState("");
+  const [buscaInput, setBuscaInput] = useState("");
+  const [pagina, setPagina]         = useState(0);
+  const [dados, setDados]           = useState<SgdwPaginaDados | null>(null);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro]             = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const montado = useRef(true);
+  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+
+  const carregar = useCallback(async () => {
+    setCarregando(true); setErro(null);
+    try {
+      const r = await buscarVeiculosSgdw(config, pagina, busca);
+      if (montado.current) { setDados(r); setExpandedId(null); }
+    } catch (e) {
+      if (montado.current) setErro(e instanceof Error ? e.message : "Erro");
+    } finally {
+      if (montado.current) setCarregando(false);
+    }
+  }, [config, pagina, busca]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const total    = dados?.total ?? 0;
+  const totalPag = Math.ceil(total / SGDW_POR_PAGINA);
+
+  return (
+    <div>
+      {/* Toolbar */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
+        <form onSubmit={e => { e.preventDefault(); setPagina(0); setBusca(buscaInput); setExpandedId(null); }} style={{ display: "flex", gap: 6, flex: 1, minWidth: 200 }}>
+          <input value={buscaInput} onChange={e => setBuscaInput(e.target.value)}
+            placeholder="Buscar por placa ou RENAVAM..."
+            style={{ flex: 1, padding: "5px 10px", borderRadius: 7, border: "1px solid #d0ddd6", fontSize: "0.75rem" }}/>
+          <button type="submit" style={{ padding: "5px 11px", borderRadius: 7, background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem" }}>
+            <Search size={12}/> Buscar
+          </button>
+          {busca && <button type="button" onClick={() => { setBusca(""); setBuscaInput(""); setPagina(0); setExpandedId(null); }} style={{ padding: "5px 10px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", fontSize: "0.73rem" }}>Limpar</button>}
+        </form>
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {dados && <span style={{ fontSize: "0.68rem", color: "#7a9a84" }}>{total.toLocaleString("pt-BR")} veiculos</span>}
+          <button type="button" onClick={carregar} disabled={carregando}
+            style={{ padding: "5px 11px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", opacity: carregando ? 0.6 : 1 }}>
+            <RefreshCw size={11} style={{ animation: carregando ? "spin 1s linear infinite" : "none" }}/> Atualizar
+          </button>
+        </div>
+      </div>
+
+      {/* Loading */}
+      {carregando && !dados && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "28px 0", color: "#888", fontSize: "0.78rem" }}>
+          <RefreshCw size={14} style={{ animation: "spin 1s linear infinite", color: "var(--accent)" }}/> Carregando veiculos...
+        </div>
+      )}
+
+      {/* Error */}
+      {erro && <div style={{ background: "#fdf3f2", border: "1px solid #f0c0bc", borderRadius: 8, padding: "10px 14px", fontSize: "0.75rem", color: "#c0392b", marginBottom: 10, whiteSpace: "pre-wrap" }}>{erro}</div>}
+
+      {/* Cards grid */}
+      {dados && dados.linhas.length > 0 && (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 14 }}>
+          {dados.linhas.map(v => {
+            const id = Number(v.VEINUMER ?? 0);
+            return (
+              <VeiculoCard key={id} veiculo={v}
+                expanded={expandedId === id}
+                onToggle={() => setExpandedId(prev => prev === id ? null : id)}/>
+            );
+          })}
+        </div>
+      )}
+
+      {dados && dados.linhas.length === 0 && !carregando && (
+        <div style={{ textAlign: "center", padding: "32px 0", color: "#888", fontSize: "0.8rem" }}>Nenhum veiculo encontrado.</div>
+      )}
+
+      {/* Pagination */}
+      {totalPag > 1 && (
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginTop: 18 }}>
+          <button type="button" disabled={pagina === 0 || carregando} onClick={() => setPagina(p => p - 1)}
+            style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #d0ddd6", background: "#f0f5f2", cursor: pagina === 0 ? "not-allowed" : "pointer", opacity: pagina === 0 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem", fontWeight: 600 }}>
+            <ChevronLeft size={13}/> Anterior
+          </button>
+          <span style={{ fontSize: "0.73rem", color: "#666" }}>{pagina + 1} / {totalPag}</span>
+          <button type="button" disabled={pagina >= totalPag - 1 || carregando} onClick={() => setPagina(p => p + 1)}
+            style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #d0ddd6", background: "#f0f5f2", cursor: pagina >= totalPag - 1 ? "not-allowed" : "pointer", opacity: pagina >= totalPag - 1 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem", fontWeight: 600 }}>
+            Proximo <ChevronRight size={13}/>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Explorer ────────────────────────────────────────────────────────────
 
 export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
@@ -998,7 +1324,7 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
   }
 
   const fetchDados = useCallback(async () => {
-    if (aba === "schema" || aba === "empresas") return;
+    if (aba === "schema" || aba === "empresas" || aba === "veiculos") return;
     setCarregando(true); setErro(null);
     try {
       let r: SgdwPaginaDados;
@@ -1013,7 +1339,6 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
           break;
         }
         case "clientes":     r = await buscarClientesSgdw(config, pagina, busca); break;
-        case "veiculos":     r = await buscarVeiculosSgdw(config, pagina, busca); break;
         case "servicos":     r = await buscarServicosSgdw(config); break;
         case "caixa": {
           const [cxData, kpi] = await Promise.all([
@@ -1145,6 +1470,8 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
           <SchemaTab config={config} tabelas={tabelas} tabelasLoading={tabelasLoading} />
         ) : aba === "empresas" ? (
           <EmpresasTab config={config} />
+        ) : aba === "veiculos" ? (
+          <VeiculosTab config={config} />
         ) : (
           <>
             {/* KPI bar */}
