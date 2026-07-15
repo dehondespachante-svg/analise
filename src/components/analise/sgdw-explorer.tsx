@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, Search, X, AlertTriangle, CheckCircle } from "lucide-react";
@@ -959,123 +959,122 @@ function EmpresasTab({ config }: { config: SgdwConfig }) {
 
 // ─── Veículo Card ─────────────────────────────────────────────────────────────
 
-function CarSvg({ uid, cor }: { uid: string; cor: string }) {
-  const b = `${uid}_b`; const g = `${uid}_g`; const w = `${uid}_w`; const r = `${uid}_r`; const hl = `${uid}_hl`;
+function Spokes({ cx, cy, r1, r2, n, stroke }: { cx: number; cy: number; r1: number; r2: number; n: number; stroke: string }) {
   return (
-    <svg viewBox="0 0 220 96" fill="none" xmlns="http://www.w3.org/2000/svg"
-      style={{ width: "100%", filter: `drop-shadow(0 6px 18px ${cor}55)` }}>
+    <>
+      {Array.from({ length: n }, (_, i) => {
+        const a = (i * Math.PI * 2) / n;
+        return <line key={i}
+          x1={cx + r1 * Math.cos(a)} y1={cy + r1 * Math.sin(a)}
+          x2={cx + r2 * Math.cos(a)} y2={cy + r2 * Math.sin(a)}
+          stroke={stroke} strokeWidth="2.5" strokeLinecap="round"/>;
+      })}
+    </>
+  );
+}
+
+function CarSvg({ uid, cor }: { uid: string; cor: string }) {
+  const b = `${uid}_b`; const g = `${uid}_g`; const w = `${uid}_w`; const r = `${uid}_r`;
+  return (
+    <svg viewBox="0 0 290 118" fill="none" xmlns="http://www.w3.org/2000/svg"
+      style={{ width: "100%", filter: `drop-shadow(0 10px 24px ${cor}70)` }}>
       <defs>
         <linearGradient id={b} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={cor} stopOpacity="0.9"/>
-          <stop offset="50%" stopColor={cor} stopOpacity="0.7"/>
-          <stop offset="100%" stopColor="#1a2030" stopOpacity="0.9"/>
+          <stop offset="0%" stopColor={cor}/>
+          <stop offset="50%" stopColor={cor} stopOpacity="0.82"/>
+          <stop offset="100%" stopColor="#060c14"/>
         </linearGradient>
-        <linearGradient id={g} x1="0.1" y1="0" x2="0.3" y2="1">
-          <stop offset="0%" stopColor="#90c8e8" stopOpacity="0.92"/>
-          <stop offset="100%" stopColor="#3870a0" stopOpacity="0.75"/>
-        </linearGradient>
-        <radialGradient id={w} cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#505868"/>
-          <stop offset="55%" stopColor="#303848"/>
-          <stop offset="100%" stopColor="#181e28"/>
-        </radialGradient>
-        <radialGradient id={r} cx="50%" cy="50%">
-          <stop offset="0%" stopColor="#d0d8e8"/>
-          <stop offset="50%" stopColor="#9098b0"/>
-          <stop offset="100%" stopColor="#505868"/>
-        </radialGradient>
-        <linearGradient id={hl} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="white" stopOpacity="0.28"/>
+        <linearGradient id={`${b}s`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="white" stopOpacity="0.22"/>
           <stop offset="100%" stopColor="white" stopOpacity="0"/>
         </linearGradient>
+        <linearGradient id={g} x1="0.15" y1="0" x2="0.25" y2="1">
+          <stop offset="0%" stopColor="#c8eaff" stopOpacity="0.96"/>
+          <stop offset="55%" stopColor="#6aaad8" stopOpacity="0.85"/>
+          <stop offset="100%" stopColor="#2460a0" stopOpacity="0.78"/>
+        </linearGradient>
+        <radialGradient id={w}>
+          <stop offset="0%" stopColor="#606878"/>
+          <stop offset="50%" stopColor="#282e3c"/>
+          <stop offset="100%" stopColor="#0c1018"/>
+        </radialGradient>
+        <radialGradient id={r}>
+          <stop offset="0%" stopColor="#f0f4ff"/>
+          <stop offset="35%" stopColor="#c0c8e0"/>
+          <stop offset="70%" stopColor="#7888b0"/>
+          <stop offset="100%" stopColor="#384060"/>
+        </radialGradient>
+        <radialGradient id={`${uid}_hl`} cx="50%" cy="30%">
+          <stop offset="0%" stopColor={cor} stopOpacity="0.25"/>
+          <stop offset="100%" stopColor={cor} stopOpacity="0"/>
+        </radialGradient>
       </defs>
 
-      {/* Ground shadow */}
-      <ellipse cx="110" cy="92" rx="92" ry="5" fill="rgba(0,0,0,0.35)"/>
+      <ellipse cx="145" cy="108" rx="118" ry="7" fill="rgba(0,0,0,0.45)"/>
+      <ellipse cx="145" cy="108" rx="80" ry="4" fill={cor} opacity="0.08"/>
 
-      {/* Main body */}
-      <path d="M 10,74 L 10,58 Q 16,44 34,36 L 62,22 Q 78,14 96,13 L 134,13 Q 154,13 170,23 L 192,38 Q 206,48 210,58 L 210,74 Z"
+      <circle cx="74"  cy="90" r="28" fill={`url(#${w})`}/>
+      <circle cx="74"  cy="90" r="20" fill={`url(#${r})`}/>
+      <Spokes cx={74}  cy={90} r1={6} r2={19} n={10} stroke="#5868a0"/>
+      <circle cx="74"  cy="90" r="5.5" fill="#1a2030"/>
+      <circle cx="74"  cy="90" r="2.8" fill={cor}/>
+
+      <circle cx="216" cy="90" r="28" fill={`url(#${w})`}/>
+      <circle cx="216" cy="90" r="20" fill={`url(#${r})`}/>
+      <Spokes cx={216} cy={90} r1={6} r2={19} n={10} stroke="#5868a0"/>
+      <circle cx="216" cy="90" r="5.5" fill="#1a2030"/>
+      <circle cx="216" cy="90" r="2.8" fill={cor}/>
+
+      <path d="M 10,92 L 10,72 Q 14,58 28,50 L 54,34 Q 72,20 96,18 L 180,18 Q 208,18 228,34 L 258,58 Q 272,68 275,78 L 276,92 Z"
         fill={`url(#${b})`}/>
+      <path d="M 28,92 A 34,34 0 0 1 104,92" fill="#06090e"/>
+      <path d="M 170,92 A 34,34 0 0 1 246,92" fill="#06090e"/>
 
-      {/* Wheel arch cutouts */}
-      <path d="M 28,74 A 29,29 0 0 1 88,74" fill="#0a1020"/>
-      <path d="M 132,74 A 29,29 0 0 1 192,74" fill="#0a1020"/>
-
-      {/* Greenhouse / windows */}
-      <path d="M 64,22 Q 82,10 96,9 L 134,9 Q 152,9 168,22 L 164,42 L 66,42 Z"
+      <path d="M 58,34 Q 80,14 100,12 L 180,12 Q 208,12 226,34 L 222,56 L 62,56 Z"
         fill={`url(#${g})`}/>
+      <path d="M 66,16 Q 104,8 152,12 L 148,26 Q 106,22 70,30 Z" fill="rgba(255,255,255,0.24)"/>
+      <path d="M 180,14 Q 208,14 222,34 L 214,38 Q 202,18 182,18 Z" fill="rgba(255,255,255,0.14)"/>
+      <rect x="153" y="12" width="5" height="44" rx="2" fill="#101820"/>
+      <path d="M 62,56 L 57,92" stroke="rgba(255,255,255,0.06)" strokeWidth="2" fill="none"/>
+      <path d="M 222,56 L 228,92" stroke="rgba(255,255,255,0.06)" strokeWidth="2" fill="none"/>
+      <path d="M 12,70 Q 145,58 274,70" stroke="rgba(255,255,255,0.18)" strokeWidth="2" fill="none"/>
+      <path d="M 10,72 Q 145,54 276,72 L 276,62 Q 145,44 10,62 Z" fill={`url(#${`${b}s`})`}/>
+      <path d="M 68,12 Q 145,6 220,12" stroke="rgba(255,255,255,0.32)" strokeWidth="2" fill="none" strokeLinecap="round"/>
+      <path d="M 226,34 Q 254,52 272,76" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" fill="none"/>
 
-      {/* Window glare */}
-      <path d="M 70,11 Q 100,7 140,10 L 138,20 Q 105,16 74,20 Z"
-        fill="rgba(255,255,255,0.18)"/>
+      <path d="M 246,44 L 274,34 L 276,46 L 248,56 Z" fill="#fff8e0" opacity="0.96"/>
+      <path d="M 250,46 L 272,37 L 273,44 L 251,52 Z" fill="white" opacity="0.55"/>
+      <path d="M 248,50 L 272,41" stroke={cor} strokeWidth="1.5" opacity="0.6"/>
+      <path d="M 276,36 L 292,28 L 292,48 L 276,48 Z" fill="#fff8c0" opacity="0.1"/>
 
-      {/* B-pillar */}
-      <line x1="120" y1="9" x2="118" y2="42" stroke="#253040" strokeWidth="3"/>
+      <path d="M 10,50 L 17,46 L 17,64 L 10,64 Z" fill="#ff1a1a" opacity="0.95"/>
+      <path d="M 11,52 L 16,49 L 16,62 L 11,62 Z" fill="#ff8080" opacity="0.5"/>
+      <ellipse cx="9" cy="58" rx="5" ry="10" fill="#ff0000" opacity="0.1"/>
 
-      {/* Door lines */}
-      <path d="M 66,42 L 62,74" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" fill="none"/>
-      <path d="M 164,42 L 168,74" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" fill="none"/>
+      <path d="M 248,80 L 277,68 L 278,84 L 248,90 Z" fill="#0e1420"/>
+      {[252,258,264,270].map(x => (
+        <line key={x} x1={x} y1={70} x2={x+1} y2={88} stroke="#1e2a38" strokeWidth="1.2"/>
+      ))}
+      <path d="M 10,78 L 34,72 L 34,92 L 10,92 Z" fill="#0e1420"/>
+      {[16,22,28].map(x => (
+        <line key={x} x1={x} y1={72} x2={x} y2={92} stroke="#1e2a38" strokeWidth="1.2"/>
+      ))}
+      <path d="M 36,84 L 248,84 L 246,90 L 38,90 Z" fill="rgba(255,255,255,0.05)"/>
 
-      {/* Body highlight stripe */}
-      <path d="M 12,58 Q 110,50 208,58" stroke="rgba(255,255,255,0.14)" strokeWidth="1.5" fill="none"/>
+      <ellipse cx="26" cy="91" rx="6" ry="3.5" fill="#141c28"/>
+      <ellipse cx="26" cy="91" rx="3.5" ry="2" fill="#060c14"/>
+      <ellipse cx="37" cy="91" rx="5" ry="3" fill="#141c28"/>
+      <ellipse cx="37" cy="91" rx="2.8" ry="1.6" fill="#060c14"/>
 
-      {/* Roof highlight */}
-      <path d="M 70,9 Q 110,5 158,9" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
-
-      {/* Hood line */}
-      <path d="M 168,23 Q 188,34 208,56" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none"/>
-
-      {/* Headlight */}
-      <path d="M 196,40 L 208,37 L 210,50 L 196,52 Z" fill="#ffe090" opacity="0.95"/>
-      <path d="M 198,42 L 207,39 L 208,48 L 198,50 Z" fill="white" opacity="0.5"/>
-      {/* Headlight beam */}
-      <path d="M 210,40 L 222,34 L 224,44 L 210,48 Z" fill="#ffe090" opacity="0.18"/>
-
-      {/* Taillight */}
-      <path d="M 10,42 L 16,40 L 16,54 L 10,54 Z" fill="#ff3333" opacity="0.9"/>
-      <path d="M 11,44 L 15,42 L 15,52 L 11,52 Z" fill="#ff8888" opacity="0.55"/>
-
-      {/* Front grille */}
-      <path d="M 200,58 Q 210,58 210,66 L 204,70 L 196,68 L 196,62 Z" fill="#1a2030"/>
-      <line x1="198" y1="61" x2="209" y2="61" stroke="#304050" strokeWidth="1"/>
-      <line x1="198" y1="64" x2="209" y2="64" stroke="#304050" strokeWidth="1"/>
-      <line x1="198" y1="67" x2="208" y2="67" stroke="#304050" strokeWidth="1"/>
-
-      {/* Rear bumper exhaust */}
-      <ellipse cx="22" cy="73" rx="5" ry="3" fill="#1a2030"/>
-      <ellipse cx="22" cy="73" rx="2.5" ry="1.5" fill="#0a1020"/>
-
-      {/* Front bumper accent */}
-      <path d="M 193,68 Q 211,68 211,74 L 193,74 Z" fill="rgba(255,255,255,0.07)"/>
-      <path d="M 10,68 Q 28,68 28,74 L 10,74 Z" fill="rgba(255,255,255,0.07)"/>
-
-      {/* Body highlight top panel */}
-      <path d="M 10,58 Q 110,44 210,58 L 210,50 Q 110,36 10,50 Z" fill={`url(#${hl})`}/>
-
-      {/* REAR WHEEL */}
-      <circle cx="58" cy="76" r="22" fill={`url(#${w})`}/>
-      <circle cx="58" cy="76" r="15" fill={`url(#${r})`}/>
-      <circle cx="58" cy="76" r="6" fill="#2a3040"/>
-      <circle cx="58" cy="76" r="3" fill="#c0c8d8"/>
-      <line x1="58" y1="61" x2="58" y2="91" stroke="#40485a" strokeWidth="2.5"/>
-      <line x1="43" y1="76" x2="73" y2="76" stroke="#40485a" strokeWidth="2.5"/>
-      <line x1="47.5" y1="65.5" x2="68.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
-      <line x1="68.5" y1="65.5" x2="47.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
-
-      {/* FRONT WHEEL */}
-      <circle cx="162" cy="76" r="22" fill={`url(#${w})`}/>
-      <circle cx="162" cy="76" r="15" fill={`url(#${r})`}/>
-      <circle cx="162" cy="76" r="6" fill="#2a3040"/>
-      <circle cx="162" cy="76" r="3" fill="#c0c8d8"/>
-      <line x1="162" y1="61" x2="162" y2="91" stroke="#40485a" strokeWidth="2.5"/>
-      <line x1="147" y1="76" x2="177" y2="76" stroke="#40485a" strokeWidth="2.5"/>
-      <line x1="151.5" y1="65.5" x2="172.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
-      <line x1="172.5" y1="65.5" x2="151.5" y2="86.5" stroke="#40485a" strokeWidth="2"/>
+      <ellipse cx="145" cy="54" rx="100" ry="36" fill={`url(#${`${uid}_hl`})`}/>
     </svg>
   );
 }
 
-const CAR_CORES = ["#6888c8", "#c87848", "#48a878", "#a868c8", "#c8b840", "#48a8c8", "#c84858", "#68b8a0"];
+const CAR_CORES = [
+  "#1e6fc8", "#c82828", "#18a040", "#c89018",
+  "#8820c8", "#08a8b0", "#c05818", "#4860c0",
+];
 
 function VeiculoCard({ veiculo, expanded, onToggle }: {
   veiculo: Record<string, unknown>; expanded: boolean; onToggle: () => void;
@@ -1088,96 +1087,109 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
   const ultimaOs = !!veiculo.ULTIMA_OS ? fmtData(veiculo.ULTIMA_OS as string) : "-";
   const cor      = CAR_CORES[veinumer % CAR_CORES.length];
   const uid      = `cv${veinumer}`;
-
-  // Mercosul or old plate format detect
   const isMercosul = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(placa);
 
   return (
     <div onClick={onToggle} style={{
-      background: "linear-gradient(145deg, #0d1622 0%, #121e2e 60%, #0a1218 100%)",
-      borderRadius: 14, overflow: "hidden", cursor: "pointer",
-      border: expanded ? `1px solid ${cor}66` : "1px solid #1c2a3a",
+      borderRadius: 16, overflow: "hidden", cursor: "pointer",
+      border: expanded ? `1px solid ${cor}88` : "1px solid rgba(255,255,255,0.06)",
+      background: "linear-gradient(160deg, #0e1824 0%, #141e2e 55%, #0a1018 100%)",
       boxShadow: expanded
-        ? `0 8px 28px rgba(0,0,0,0.6), 0 0 0 1px ${cor}44, inset 0 1px 0 rgba(255,255,255,0.05)`
-        : "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)",
-      transition: "box-shadow 0.2s, border-color 0.2s",
+        ? `0 12px 36px rgba(0,0,0,0.7), 0 0 0 1px ${cor}55, inset 0 1px 0 rgba(255,255,255,0.07)`
+        : "0 4px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
+      transition: "box-shadow 0.22s, border-color 0.22s, transform 0.15s",
     }}
-    onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLDivElement).style.boxShadow = `0 8px 24px rgba(0,0,0,0.6), 0 0 0 1px ${cor}33`; }}
-    onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)"; }}>
+    onMouseEnter={e => {
+      const d = e.currentTarget as HTMLDivElement;
+      d.style.transform = "translateY(-3px)";
+      d.style.boxShadow = `0 16px 40px rgba(0,0,0,0.7), 0 0 0 1px ${cor}66`;
+    }}
+    onMouseLeave={e => {
+      const d = e.currentTarget as HTMLDivElement;
+      d.style.transform = "none";
+      d.style.boxShadow = expanded
+        ? `0 12px 36px rgba(0,0,0,0.7), 0 0 0 1px ${cor}55, inset 0 1px 0 rgba(255,255,255,0.07)`
+        : "0 4px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)";
+    }}>
 
-      {/* Car stage */}
-      <div style={{
-        padding: "18px 14px 10px",
-        background: `radial-gradient(ellipse at 50% 0%, ${cor}18 0%, transparent 70%)`,
-        position: "relative",
-      }}>
-        {/* Top accent line */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${cor}aa, transparent)` }}/>
-        <CarSvg uid={uid} cor={cor} />
+      <div style={{ height: 3, background: `linear-gradient(90deg, transparent 0%, ${cor} 30%, ${cor}dd 70%, transparent 100%)` }}/>
+
+      <div style={{ padding: "14px 10px 6px", background: `radial-gradient(ellipse at 50% 20%, ${cor}20 0%, transparent 68%)` }}>
+        <CarSvg uid={uid} cor={cor}/>
       </div>
 
-      {/* License plate */}
-      <div style={{ display: "flex", justifyContent: "center", paddingBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
         <div style={{
-          background: "#f8f8f8",
-          border: "2px solid #1a40a0",
-          borderRadius: 4, padding: "3px 12px 3px 8px",
-          display: "flex", alignItems: "center", gap: 6,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+          background: "linear-gradient(180deg, #fcfcfc 0%, #f0f0f0 100%)",
+          border: "2.5px solid #1a3a9a", borderRadius: 5, overflow: "hidden",
+          boxShadow: "0 3px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.8)",
+          display: "flex", alignItems: "stretch",
         }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid #1a40a0", paddingRight: 5, marginRight: 2 }}>
-            <span style={{ fontSize: "0.45rem", fontWeight: 900, color: "#1a1ac0", letterSpacing: "0.08em" }}>🇧🇷 BR</span>
-            <span style={{ fontSize: "0.38rem", color: "#5a5aaa", letterSpacing: "0.04em" }}>{isMercosul ? "MERCOSUL" : "BRASIL"}</span>
+          <div style={{ background: "linear-gradient(180deg, #1a3aaa, #0f2880)", padding: "3px 5px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minWidth: 28 }}>
+            <span style={{ fontSize: "0.55rem", color: "#ffe" }}>&#x1F1E7;&#x1F1F7;</span>
+            <span style={{ fontSize: "0.38rem", fontWeight: 800, color: "#dde", letterSpacing: "0.05em", lineHeight: 1.2 }}>BRASIL</span>
           </div>
-          <span style={{ fontSize: "0.92rem", fontWeight: 900, color: "#111", letterSpacing: "0.18em", fontFamily: "monospace" }}>{placa}</span>
+          <div style={{ padding: "5px 14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+            {isMercosul && (
+              <div style={{ fontSize: "0.38rem", color: "#1a3a9a", fontWeight: 700, letterSpacing: "0.15em", lineHeight: 1, marginBottom: 1 }}>MERCOSUL</div>
+            )}
+            <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#0a0a0a", letterSpacing: "0.2em", fontFamily: "'Courier New', monospace", lineHeight: 1 }}>
+              {placa}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* HUD stats bar */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", borderTop: "1px solid #1c2a3a" }}>
-        {[
-          { label: "OS", value: String(qtdOs), color: "#40d090" },
-          { label: "Honorarios", value: moeda.format(totalHon).replace("R$ ","R$ "), color: "#e8b840" },
-          { label: "Ultima OS", value: ultimaOs, color: "#60a8d8" },
-        ].map((s, i) => (
-          <div key={s.label} style={{
-            textAlign: "center", padding: "7px 4px",
-            borderRight: i < 2 ? "1px solid #1c2a3a" : "none",
-            background: "rgba(0,0,0,0.15)",
-          }}>
-            <div style={{ fontSize: i === 0 ? "1rem" : "0.65rem", fontWeight: 800, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
-            <div style={{ fontSize: "0.5rem", color: "#3a5870", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>{s.label}</div>
+      <div style={{ margin: "0 10px 10px", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.3)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr" }}>
+          <div style={{ padding: "10px 8px", textAlign: "center" }}>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#30d898", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{qtdOs}</div>
+            <div style={{ fontSize: "0.5rem", color: "#2a6050", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Ordens de Serv.</div>
           </div>
-        ))}
+          <div style={{ background: "rgba(255,255,255,0.07)" }}/>
+          <div style={{ padding: "10px 8px", textAlign: "center" }}>
+            <div style={{ fontSize: "0.9rem", fontWeight: 900, color: "#f0c840", lineHeight: 1.1 }}>{moeda.format(totalHon)}</div>
+            <div style={{ fontSize: "0.5rem", color: "#604820", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Total Honor.</div>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: "0.52rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Ultima OS</span>
+          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#6090c0" }}>{ultimaOs}</span>
+        </div>
       </div>
 
-      {/* Expand toggle */}
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "5px 0", gap: 4, background: "rgba(0,0,0,0.2)" }}>
-        <span style={{ fontSize: "0.55rem", color: expanded ? cor : "#2a4a6a", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", transition: "color 0.2s" }}>
-          {expanded ? "▲ Fechar" : "▼ Ver Detalhes"}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "6px 0 8px", gap: 5 }}>
+        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, ${cor}44)`, marginLeft: 14 }}/>
+        <span style={{ fontSize: "0.58rem", color: expanded ? cor : "#2a4060", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", transition: "color 0.2s" }}>
+          {expanded ? "&#x25B2; Fechar" : "&#x25BC; Detalhes"}
         </span>
+        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${cor}44, transparent)`, marginRight: 14 }}/>
       </div>
 
-      {/* Expanded details */}
       {expanded && (
-        <div style={{ padding: "12px 16px", background: "rgba(0,0,0,0.3)", borderTop: `1px solid ${cor}33` }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+        <div style={{ padding: "14px 14px 16px", borderTop: `1px solid ${cor}30`, background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 100%)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
             {[
-              { label: "Codigo", value: String(veinumer) },
+              { label: "Codigo Interno", value: `#${veinumer}` },
               { label: "RENAVAM", value: renavam },
             ].map(f => (
-              <div key={f.label}>
-                <div style={{ fontSize: "0.52rem", color: "#3a5870", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>{f.label}</div>
-                <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#88b0d0", fontFamily: "monospace", background: "rgba(0,0,0,0.3)", padding: "4px 7px", borderRadius: 5, border: "1px solid #1c2a3a" }}>
-                  {f.value}
-                </div>
+              <div key={f.label} style={{ background: "rgba(0,0,0,0.35)", borderRadius: 8, padding: "8px 10px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ fontSize: "0.5rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4, fontWeight: 700 }}>{f.label}</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#7aaad8", fontFamily: "monospace" }}>{f.value}</div>
               </div>
             ))}
           </div>
-          <div style={{ background: `linear-gradient(90deg, ${cor}22, transparent)`, borderLeft: `3px solid ${cor}`, padding: "6px 10px", borderRadius: "0 6px 6px 0" }}>
-            <div style={{ fontSize: "0.6rem", color: "#3a5870", textTransform: "uppercase", letterSpacing: "0.06em" }}>Total acumulado</div>
-            <div style={{ fontSize: "0.85rem", fontWeight: 800, color: "#e8b840" }}>{moeda.format(totalHon)}</div>
-            <div style={{ fontSize: "0.58rem", color: "#4a7890", marginTop: 2 }}>em {qtdOs} ordens de servico</div>
+          <div style={{ background: `linear-gradient(135deg, ${cor}18 0%, transparent 60%)`, border: `1px solid ${cor}33`, borderRadius: 10, padding: "10px 14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontSize: "0.5rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Total acumulado</div>
+                <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#f0c840" }}>{moeda.format(totalHon)}</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: "0.5rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Servicos</div>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#30d898", lineHeight: 1 }}>{qtdOs}</div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1249,7 +1261,7 @@ function VeiculosTab({ config }: { config: SgdwConfig }) {
 
       {/* Cards grid */}
       {dados && dados.linhas.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 14 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
           {dados.linhas.map(v => {
             const id = Number(v.VEINUMER ?? 0);
             return (
