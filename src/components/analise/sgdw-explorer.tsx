@@ -1111,8 +1111,8 @@ function VeiculoCard({ veiculo, onOpen }: {
 
       <div style={{ height: 5, background: `linear-gradient(90deg, ${cor}, ${cor}bb)` }}/>
 
-      <div style={{ padding: "14px 10px 6px", background: `radial-gradient(ellipse at 50% 20%, ${cor}15 0%, transparent 70%)` }}>
-        <CarSvg uid={uid} cor={cor}/>
+      <div style={{ padding: "14px 10px 6px", background: `radial-gradient(ellipse at 50% 20%, ${cor}15 0%, transparent 70%)`, display: "flex", justifyContent: "center" }}>
+        <img src="/veiculos.png" alt="veiculo" style={{ width: "100%", maxWidth: 220, objectFit: "contain" }}/>
       </div>
 
       {/* Placa */}
@@ -1224,7 +1224,7 @@ function VeiculoModal({ config, veiculo, onClose }: {
             </div>
           </div>
           <div style={{ width: 160, flexShrink: 0 }}>
-            <CarSvg uid={uid} cor="#ffffff"/>
+            <img src="/veiculos.png" alt="veiculo" style={{ width: "100%", objectFit: "contain" }}/>
           </div>
           <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 8, color: "#fff", cursor: "pointer", fontSize: "1.1rem", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
         </div>
