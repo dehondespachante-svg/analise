@@ -394,6 +394,32 @@ export async function buscarFuncionariosSgdw(config: SgdwConfig): Promise<SgdwPa
   return { linhas: r.rows, total: r.rows.length };
 }
 
+// ─── OS por veículo ───────────────────────────────────────────────────────────
+
+export async function buscarOsVeiculoSgdw(
+  config: SgdwConfig,
+  veinumer: number
+): Promise<SgdwPaginaDados> {
+  const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", {
+    sql: `SELECT FIRST 500 SKIP 0
+      o.ORDNUMER,
+      o.ORDDTEMI AS DATA,
+      COALESCE(TRIM(s.SERDESCR), '-') AS SERVICO,
+      COALESCE(TRIM(c.CLINOMES), '-') AS CLIENTE,
+      COALESCE(o.ORDVLTOT, 0) AS HONORARIOS,
+      COALESCE(o.ORDVLREC, 0) AS RECEBIDO,
+      COALESCE(o.ORDVLTOT, 0) - COALESCE(o.ORDVLREC, 0) AS SALDO
+    FROM TBORDSE o
+    LEFT JOIN TBCLIEN c ON c.CLINUMER = o.ORDORIGE
+    LEFT JOIN TBSERVI s ON s.SERNUMER = o.SOSNUMER
+    WHERE o.VEINUMER = ?
+      AND COALESCE(o.ORDCANC, 0) = 0
+    ORDER BY o.ORDDTEMI DESC, o.ORDNUMER DESC`,
+    params: [veinumer],
+  });
+  return { linhas: r.rows, total: r.rows.length };
+}
+
 // ─── Planilha empresa/mês ──────────────────────────────────────────────────────
 
 export async function buscarOsEmpresaMesSgdw(

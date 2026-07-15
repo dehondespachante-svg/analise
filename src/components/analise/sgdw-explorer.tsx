@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, RefreshCw, Search, X, AlertTriangle, CheckCi
 import {
   buscarCaixaSgdw, buscarClientesSgdw, buscarDadosTabelaSgdw, buscarEmpresasSgdw,
   buscarEsquemaTiposSgdw, buscarFuncionariosSgdw, buscarKpiCaixaSgdw, buscarKpiOsSgdw,
-  buscarOsSgdw, buscarServicosSgdw, buscarVeiculosEmpresaSgdw, buscarVeiculosSgdw,
+  buscarOsSgdw, buscarOsVeiculoSgdw, buscarServicosSgdw, buscarVeiculosEmpresaSgdw, buscarVeiculosSgdw,
   cancelarOsSgdw, listarTabelasSgdw, reativarOsSgdw,
   SGDW_EMPRESAS_POR_PAGINA, SGDW_POR_PAGINA,
 } from "@/src/features/sgdw/client";
@@ -1076,8 +1076,8 @@ const CAR_CORES = [
   "#8820c8", "#08a8b0", "#c05818", "#4860c0",
 ];
 
-function VeiculoCard({ veiculo, expanded, onToggle }: {
-  veiculo: Record<string, unknown>; expanded: boolean; onToggle: () => void;
+function VeiculoCard({ veiculo, onOpen }: {
+  veiculo: Record<string, unknown>; onOpen: () => void;
 }) {
   const veinumer = Number(veiculo.VEINUMER ?? 0);
   const placa    = String(veiculo.PLACA ?? "-").toUpperCase();
@@ -1090,43 +1090,32 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
   const isMercosul = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(placa);
 
   return (
-    <div onClick={onToggle} style={{
+    <div onClick={onOpen} style={{
       borderRadius: 16, overflow: "hidden", cursor: "pointer",
-      background: "#ffffff",
-      border: expanded ? `2px solid ${cor}` : `1px solid #e5e7eb`,
-      boxShadow: expanded
-        ? `0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px ${cor}33`
-        : "0 2px 10px rgba(0,0,0,0.08)",
-      transition: "box-shadow 0.2s, border-color 0.2s, transform 0.15s",
+      background: "#ffffff", border: `1px solid #e5e7eb`,
+      boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+      transition: "box-shadow 0.2s, transform 0.15s",
     }}
     onMouseEnter={e => {
       const d = e.currentTarget as HTMLDivElement;
       d.style.transform = "translateY(-3px)";
-      d.style.boxShadow = `0 10px 28px rgba(0,0,0,0.14), 0 0 0 1px ${cor}55`;
+      d.style.boxShadow = `0 10px 28px rgba(0,0,0,0.14), 0 0 0 2px ${cor}55`;
     }}
     onMouseLeave={e => {
       const d = e.currentTarget as HTMLDivElement;
       d.style.transform = "none";
-      d.style.boxShadow = expanded
-        ? `0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px ${cor}33`
-        : "0 2px 10px rgba(0,0,0,0.08)";
+      d.style.boxShadow = "0 2px 10px rgba(0,0,0,0.08)";
     }}>
 
-      {/* Barra de cor no topo */}
       <div style={{ height: 5, background: `linear-gradient(90deg, ${cor}, ${cor}bb)` }}/>
 
-      {/* Carro */}
       <div style={{ padding: "14px 10px 6px", background: `radial-gradient(ellipse at 50% 20%, ${cor}15 0%, transparent 70%)` }}>
         <CarSvg uid={uid} cor={cor}/>
       </div>
 
       {/* Placa */}
       <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 12px" }}>
-        <div style={{
-          background: cor, borderRadius: 6,
-          boxShadow: `0 2px 8px ${cor}55`,
-          padding: "4px 18px", textAlign: "center",
-        }}>
+        <div style={{ background: cor, borderRadius: 6, boxShadow: `0 2px 8px ${cor}55`, padding: "4px 18px", textAlign: "center" }}>
           <div style={{ fontSize: "0.32rem", color: "rgba(255,255,255,0.7)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 1 }}>
             {isMercosul ? "MERCOSUL" : "BRASIL"}
           </div>
@@ -1136,11 +1125,11 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
         </div>
       </div>
 
-      {/* Stats */}
-      <div style={{ margin: "0 12px 12px", borderRadius: 10, overflow: "hidden", border: `1px solid #f0f0f0`, background: "#f8f9fa" }}>
+      {/* Stats sempre visíveis */}
+      <div style={{ margin: "0 12px 10px", borderRadius: 10, overflow: "hidden", border: "1px solid #f0f0f0", background: "#f8f9fa" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr" }}>
           <div style={{ padding: "10px 8px", textAlign: "center" }}>
-            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: cor, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{qtdOs}</div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: cor, lineHeight: 1 }}>{qtdOs}</div>
             <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Ordens de Serv.</div>
           </div>
           <div style={{ background: "#e5e7eb" }}/>
@@ -1149,47 +1138,169 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
             <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Total Honor.</div>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid #e5e7eb", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ borderTop: "1px solid #e5e7eb", padding: "6px 12px", display: "flex", justifyContent: "space-between" }}>
           <span style={{ fontSize: "0.52rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Ultima OS</span>
           <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#374151" }}>{ultimaOs}</span>
         </div>
       </div>
 
-      {/* Toggle */}
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "6px 0 8px", gap: 5, borderTop: "1px solid #f0f0f0" }}>
-        <span style={{ fontSize: "0.58rem", color: cor, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
-          {expanded ? "▲ Fechar" : "▼ Detalhes"}
-        </span>
+      {/* Dados cadastro sempre visíveis */}
+      <div style={{ margin: "0 12px 10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        {[
+          { label: "Codigo", value: `#${veinumer}` },
+          { label: "RENAVAM", value: renavam },
+        ].map(f => (
+          <div key={f.label} style={{ background: "#f8f9fa", borderRadius: 8, padding: "7px 10px", border: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: "0.48rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 2, fontWeight: 700 }}>{f.label}</div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1f2937", fontFamily: "monospace" }}>{f.value}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Detalhes expandidos */}
-      {expanded && (
-        <div style={{ padding: "12px 14px 16px", borderTop: `2px solid ${cor}22`, background: "#f8f9fa" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-            {[
-              { label: "Codigo", value: `#${veinumer}` },
-              { label: "RENAVAM", value: renavam },
-            ].map(f => (
-              <div key={f.label} style={{ background: "#ffffff", borderRadius: 8, padding: "8px 10px", border: "1px solid #e5e7eb" }}>
-                <div style={{ fontSize: "0.5rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>{f.label}</div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1f2937", fontFamily: "monospace" }}>{f.value}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background: `${cor}12`, border: `1px solid ${cor}33`, borderRadius: 10, padding: "10px 14px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Total acumulado</div>
-                <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#111827" }}>{moeda.format(totalHon)}</div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Servicos</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: cor, lineHeight: 1 }}>{qtdOs}</div>
-              </div>
+      {/* Botão abrir modal */}
+      <div style={{ margin: "0 12px 12px", background: cor, borderRadius: 8, padding: "8px", textAlign: "center", color: "#fff", fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.08em" }}>
+        Ver Historico Completo →
+      </div>
+    </div>
+  );
+}
+
+// ─── Modal veículo ─────────────────────────────────────────────────────────────
+
+function VeiculoModal({ config, veiculo, onClose }: {
+  config: SgdwConfig; veiculo: Record<string, unknown>; onClose: () => void;
+}) {
+  const veinumer = Number(veiculo.VEINUMER ?? 0);
+  const placa    = String(veiculo.PLACA ?? "-").toUpperCase();
+  const renavam  = String(veiculo.RENAVAM ?? "-");
+  const qtdOs    = Number(veiculo.QTD_OS ?? 0);
+  const totalHon = Number(veiculo.TOTAL_HON ?? 0);
+  const ultimaOs = !!veiculo.ULTIMA_OS ? fmtData(veiculo.ULTIMA_OS as string) : "-";
+  const cor      = CAR_CORES[veinumer % CAR_CORES.length];
+  const uid      = `mv${veinumer}`;
+  const isMercosul = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(placa);
+
+  const [os, setOs]               = useState<Record<string, unknown>[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro]           = useState<string | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    setCarregando(true); setErro(null);
+    buscarOsVeiculoSgdw(config, veinumer)
+      .then(r => { if (ativo) { setOs(r.linhas); setCarregando(false); } })
+      .catch(e => { if (ativo) { setErro(e instanceof Error ? e.message : "Erro"); setCarregando(false); } });
+    return () => { ativo = false; };
+  }, [config, veinumer]);
+
+  const totalRec  = os.reduce((s, r) => s + Number(r.RECEBIDO ?? 0), 0);
+  const totalSaldo = os.reduce((s, r) => s + Number(r.SALDO ?? 0), 0);
+
+  return (
+    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={{
+      position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 16,
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 16, width: "100%", maxWidth: 860,
+        maxHeight: "92vh", display: "flex", flexDirection: "column",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+        overflow: "hidden",
+      }}>
+
+        {/* Header */}
+        <div style={{ background: cor, padding: "16px 20px", display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.7)", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 2 }}>
+              {isMercosul ? "Mercosul" : "Brasil"} · Codigo #{veinumer}
+            </div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#fff", letterSpacing: "0.18em", fontFamily: "'Courier New', monospace", lineHeight: 1 }}>
+              {placa}
+            </div>
+            <div style={{ fontSize: "0.62rem", color: "rgba(255,255,255,0.8)", marginTop: 4 }}>
+              RENAVAM: <strong style={{ color: "#fff" }}>{renavam}</strong>
             </div>
           </div>
+          <div style={{ width: 160, flexShrink: 0 }}>
+            <CarSvg uid={uid} cor="#ffffff"/>
+          </div>
+          <button onClick={onClose} style={{ background: "rgba(255,255,255,0.2)", border: "none", borderRadius: 8, color: "#fff", cursor: "pointer", fontSize: "1.1rem", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>✕</button>
         </div>
-      )}
+
+        {/* KPIs */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 1, background: "#e5e7eb", borderBottom: "1px solid #e5e7eb" }}>
+          {[
+            { label: "Total OS", value: String(qtdOs), color: cor },
+            { label: "Honorarios", value: moeda.format(totalHon), color: "#111827" },
+            { label: "Recebido", value: moeda.format(totalRec), color: "#16a34a" },
+            { label: "Saldo", value: moeda.format(totalSaldo), color: totalSaldo > 0 ? "#dc2626" : "#16a34a" },
+          ].map(k => (
+            <div key={k.label} style={{ background: "#fff", padding: "12px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: "1.05rem", fontWeight: 900, color: k.color }}>{k.value}</div>
+              <div style={{ fontSize: "0.5rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 2, fontWeight: 700 }}>{k.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Lista OS */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 0 8px" }}>
+          <div style={{ padding: "14px 20px 8px", fontSize: "0.72rem", fontWeight: 700, color: "#374151", borderBottom: "1px solid #f0f0f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>Historico de Servicos — {os.length} ordens</span>
+            <span style={{ fontSize: "0.6rem", color: "#9ca3af" }}>Ultima: {ultimaOs}</span>
+          </div>
+
+          {carregando && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "24px 20px", color: "#888", fontSize: "0.78rem" }}>
+              <RefreshCw size={14} style={{ animation: "spin 1s linear infinite", color: cor }}/> Carregando historico...
+            </div>
+          )}
+          {erro && (
+            <div style={{ margin: "12px 20px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", fontSize: "0.75rem", color: "#dc2626" }}>{erro}</div>
+          )}
+
+          {!carregando && os.length > 0 && (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
+              <thead>
+                <tr style={{ background: "#f8f9fa", borderBottom: "2px solid #e5e7eb" }}>
+                  {["OS", "Data", "Servico", "Cliente", "Honorarios", "Recebido", "Saldo"].map(h => (
+                    <th key={h} style={{ padding: "8px 12px", textAlign: h === "OS" ? "center" : "left", fontWeight: 700, color: "#6b7280", fontSize: "0.6rem", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {os.map((row, i) => {
+                  const hon  = Number(row.HONORARIOS ?? 0);
+                  const rec  = Number(row.RECEBIDO ?? 0);
+                  const sld  = Number(row.SALDO ?? 0);
+                  return (
+                    <tr key={i} style={{ borderBottom: "1px solid #f0f0f0", background: i % 2 === 0 ? "#fff" : "#fafafa" }}>
+                      <td style={{ padding: "7px 12px", textAlign: "center", fontWeight: 700, color: cor, fontFamily: "monospace" }}>{String(row.ORDNUMER ?? "-")}</td>
+                      <td style={{ padding: "7px 12px", color: "#374151", whiteSpace: "nowrap" }}>{fmtData(String(row.DATA ?? ""))}</td>
+                      <td style={{ padding: "7px 12px", color: "#1f2937", maxWidth: 180 }}>{String(row.SERVICO ?? "-")}</td>
+                      <td style={{ padding: "7px 12px", color: "#1f2937", maxWidth: 160 }}>{String(row.CLIENTE ?? "-")}</td>
+                      <td style={{ padding: "7px 12px", textAlign: "right", fontWeight: 600, color: "#111827", whiteSpace: "nowrap" }}>{moeda.format(hon)}</td>
+                      <td style={{ padding: "7px 12px", textAlign: "right", fontWeight: 600, color: "#16a34a", whiteSpace: "nowrap" }}>{moeda.format(rec)}</td>
+                      <td style={{ padding: "7px 12px", textAlign: "right", fontWeight: 600, color: sld > 0 ? "#dc2626" : "#16a34a", whiteSpace: "nowrap" }}>{moeda.format(sld)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: "#f8f9fa", borderTop: "2px solid #e5e7eb" }}>
+                  <td colSpan={4} style={{ padding: "8px 12px", fontWeight: 700, color: "#374151", fontSize: "0.65rem" }}>TOTAL ({os.length} OS)</td>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 800, color: "#111827", whiteSpace: "nowrap" }}>{moeda.format(totalHon)}</td>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 800, color: "#16a34a", whiteSpace: "nowrap" }}>{moeda.format(totalRec)}</td>
+                  <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 800, color: totalSaldo > 0 ? "#dc2626" : "#16a34a", whiteSpace: "nowrap" }}>{moeda.format(totalSaldo)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          )}
+
+          {!carregando && os.length === 0 && !erro && (
+            <div style={{ textAlign: "center", padding: "32px 0", color: "#9ca3af", fontSize: "0.78rem" }}>Nenhuma ordem de servico encontrada.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1203,7 +1314,7 @@ function VeiculosTab({ config }: { config: SgdwConfig }) {
   const [dados, setDados]           = useState<SgdwPaginaDados | null>(null);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro]             = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [modalVeiculo, setModalVeiculo] = useState<Record<string, unknown> | null>(null);
   const montado = useRef(true);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
 
@@ -1211,7 +1322,7 @@ function VeiculosTab({ config }: { config: SgdwConfig }) {
     setCarregando(true); setErro(null);
     try {
       const r = await buscarVeiculosSgdw(config, pagina, busca);
-      if (montado.current) { setDados(r); setExpandedId(null); }
+      if (montado.current) setDados(r);
     } catch (e) {
       if (montado.current) setErro(e instanceof Error ? e.message : "Erro");
     } finally {
@@ -1226,16 +1337,21 @@ function VeiculosTab({ config }: { config: SgdwConfig }) {
 
   return (
     <div>
+      {/* Modal */}
+      {modalVeiculo && (
+        <VeiculoModal config={config} veiculo={modalVeiculo} onClose={() => setModalVeiculo(null)}/>
+      )}
+
       {/* Toolbar */}
       <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
-        <form onSubmit={e => { e.preventDefault(); setPagina(0); setBusca(buscaInput); setExpandedId(null); }} style={{ display: "flex", gap: 6, flex: 1, minWidth: 200 }}>
+        <form onSubmit={e => { e.preventDefault(); setPagina(0); setBusca(buscaInput); }} style={{ display: "flex", gap: 6, flex: 1, minWidth: 200 }}>
           <input value={buscaInput} onChange={e => setBuscaInput(e.target.value)}
             placeholder="Buscar por placa ou RENAVAM..."
             style={{ flex: 1, padding: "5px 10px", borderRadius: 7, border: "1px solid #d0ddd6", fontSize: "0.75rem" }}/>
           <button type="submit" style={{ padding: "5px 11px", borderRadius: 7, background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem" }}>
             <Search size={12}/> Buscar
           </button>
-          {busca && <button type="button" onClick={() => { setBusca(""); setBuscaInput(""); setPagina(0); setExpandedId(null); }} style={{ padding: "5px 10px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", fontSize: "0.73rem" }}>Limpar</button>}
+          {busca && <button type="button" onClick={() => { setBusca(""); setBuscaInput(""); setPagina(0); }} style={{ padding: "5px 10px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", fontSize: "0.73rem" }}>Limpar</button>}
         </form>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           {dados && <span style={{ fontSize: "0.68rem", color: "#7a9a84" }}>{total.toLocaleString("pt-BR")} veiculos</span>}
@@ -1253,20 +1369,14 @@ function VeiculosTab({ config }: { config: SgdwConfig }) {
         </div>
       )}
 
-      {/* Error */}
       {erro && <div style={{ background: "#fdf3f2", border: "1px solid #f0c0bc", borderRadius: 8, padding: "10px 14px", fontSize: "0.75rem", color: "#c0392b", marginBottom: 10, whiteSpace: "pre-wrap" }}>{erro}</div>}
 
       {/* Cards grid */}
       {dados && dados.linhas.length > 0 && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 16 }}>
-          {dados.linhas.map(v => {
-            const id = Number(v.VEINUMER ?? 0);
-            return (
-              <VeiculoCard key={id} veiculo={v}
-                expanded={expandedId === id}
-                onToggle={() => setExpandedId(prev => prev === id ? null : id)}/>
-            );
-          })}
+          {dados.linhas.map(v => (
+            <VeiculoCard key={Number(v.VEINUMER ?? 0)} veiculo={v} onOpen={() => setModalVeiculo(v)}/>
+          ))}
         </div>
       )}
 
