@@ -1538,13 +1538,24 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
     { label: "A Receber",       valor: moeda.format(osKpi.totalSaldo),    cor: osKpi.totalSaldo > 0 ? "#c0392b" : "#1a5c34" },
   ] : [];
 
-  // Caixa KPI cards
-  const caixaKpiCards = caixaKpi ? [
-    { label: "A Receber",   valor: moeda.format(caixaKpi.totalReceber), cor: "#c0392b" },
-    { label: "Recebido",    valor: moeda.format(caixaKpi.totalRecebido), cor: "#1a5c34" },
-    { label: "A Pagar",     valor: moeda.format(caixaKpi.totalPagar),    cor: "#e67e22" },
-    { label: "Pago",        valor: moeda.format(caixaKpi.totalPago),     cor: "#888" },
-  ] : [];
+  // helpers para identificar qual card de caixa está ativo
+  const caixaCardAtivo = !caixaFiltros.grupo ? null
+    : caixaFiltros.grupo === "1" && caixaFiltros.apenasAberto  ? "receber"
+    : caixaFiltros.grupo === "1" && caixaFiltros.apenasQuitado ? "recebido"
+    : caixaFiltros.grupo === "2" && caixaFiltros.apenasAberto  ? "pagar"
+    : caixaFiltros.grupo === "2" && caixaFiltros.apenasQuitado ? "pago"
+    : null;
+
+  function setCaixaCardFiltro(key: "receber" | "recebido" | "pagar" | "pago") {
+    const same = caixaCardAtivo === key;
+    const base: CaixaFiltros = { dataIni: caixaFiltros.dataIni, dataFim: caixaFiltros.dataFim };
+    if (same) { setCaixaFiltros(base); }
+    else if (key === "receber")  { setCaixaFiltros({ ...base, grupo: "1", apenasAberto: true }); }
+    else if (key === "recebido") { setCaixaFiltros({ ...base, grupo: "1", apenasQuitado: true }); }
+    else if (key === "pagar")    { setCaixaFiltros({ ...base, grupo: "2", apenasAberto: true }); }
+    else if (key === "pago")     { setCaixaFiltros({ ...base, grupo: "2", apenasQuitado: true }); }
+    setPagina(0);
+  }
 
   return (
     <div style={{ marginTop: 18 }}>
@@ -1597,7 +1608,39 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
           <>
             {/* KPI bar */}
             {aba === "os" && osKpiCards.length > 0 && <KpiBar cards={osKpiCards} />}
-            {aba === "caixa" && caixaKpiCards.length > 0 && <KpiBar cards={caixaKpiCards} />}
+            {aba === "caixa" && caixaKpi && (
+              <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
+                {([
+                  { key: "receber",  label: "A Receber",  valor: moeda.format(caixaKpi.totalReceber),  cor: "#c0392b", bg: "#fef2f2", borda: "#fecaca" },
+                  { key: "recebido", label: "Recebido",   valor: moeda.format(caixaKpi.totalRecebido), cor: "#16a34a", bg: "#f0fdf4", borda: "#bbf7d0" },
+                  { key: "pagar",    label: "A Pagar",    valor: moeda.format(caixaKpi.totalPagar),    cor: "#d97706", bg: "#fffbeb", borda: "#fde68a" },
+                  { key: "pago",     label: "Pago",       valor: moeda.format(caixaKpi.totalPago),     cor: "#6b7280", bg: "#f9fafb", borda: "#e5e7eb" },
+                ] as const).map(c => {
+                  const ativo = caixaCardAtivo === c.key;
+                  return (
+                    <div key={c.key} onClick={() => setCaixaCardFiltro(c.key)}
+                      style={{
+                        flex: "1 1 140px", borderRadius: 10, padding: "10px 14px", cursor: "pointer",
+                        background: ativo ? c.cor : c.bg,
+                        border: `2px solid ${ativo ? c.cor : c.borda}`,
+                        boxShadow: ativo ? `0 4px 14px ${c.cor}44` : "none",
+                        transition: "all 0.15s",
+                        userSelect: "none",
+                      }}>
+                      <div style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: ativo ? "rgba(255,255,255,0.8)" : c.cor, marginBottom: 4 }}>
+                        {c.label} {ativo ? "✕" : ""}
+                      </div>
+                      <div style={{ fontSize: "1rem", fontWeight: 800, color: ativo ? "#fff" : c.cor }}>
+                        {c.valor}
+                      </div>
+                      <div style={{ fontSize: "0.5rem", color: ativo ? "rgba(255,255,255,0.65)" : "#9ca3af", marginTop: 3 }}>
+                        {ativo ? "clique para limpar filtro" : "clique para filtrar"}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Filter bars */}
             {aba === "os" && <OsFiltroBar filtros={osFiltros} onChange={f => { setOsFiltros(f); setPagina(0); }} />}

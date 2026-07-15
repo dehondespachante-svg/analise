@@ -66,6 +66,7 @@ export type CaixaFiltros = {
   dataIni?: string;
   dataFim?: string;
   apenasAberto?: boolean;
+  apenasQuitado?: boolean;
 };
 
 export type SgdwOsKpi = {

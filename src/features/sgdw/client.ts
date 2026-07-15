@@ -293,7 +293,8 @@ function buildCaixaWhere(busca: string, filtros: CaixaFiltros): { where: string;
   if (filtros.grupo) { conds.push("CXA.GRUPOCONTA = ?"); params.push(Number(filtros.grupo)); }
   if (filtros.dataIni) { conds.push("CXA.DTLANCTO >= ?"); params.push(filtros.dataIni); }
   if (filtros.dataFim) { conds.push("CXA.DTLANCTO <= ?"); params.push(filtros.dataFim); }
-  if (filtros.apenasAberto) conds.push("CXA.APRAZO <> -1");
+  if (filtros.apenasAberto)  conds.push("CXA.APRAZO <> -1");
+  if (filtros.apenasQuitado) conds.push("CXA.APRAZO = -1");
   if (busca) {
     const b = esc(busca);
     conds.push(`(CAST(CXA.CAIXA AS VARCHAR(10)) CONTAINING '${b}' OR COALESCE(TRIM(C.CLINOMES),'') CONTAINING '${b}' OR COALESCE(TRIM(PC.NMCONTA),'') CONTAINING '${b}')`);
