@@ -1144,23 +1144,23 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr" }}>
           <div style={{ padding: "10px 8px", textAlign: "center" }}>
             <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#30d898", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{qtdOs}</div>
-            <div style={{ fontSize: "0.5rem", color: "#2a6050", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Ordens de Serv.</div>
+            <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Ordens de Serv.</div>
           </div>
           <div style={{ background: "rgba(255,255,255,0.07)" }}/>
           <div style={{ padding: "10px 8px", textAlign: "center" }}>
             <div style={{ fontSize: "0.9rem", fontWeight: 900, color: "#f0c840", lineHeight: 1.1 }}>{moeda.format(totalHon)}</div>
-            <div style={{ fontSize: "0.5rem", color: "#604820", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Total Honor.</div>
+            <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Total Honor.</div>
           </div>
         </div>
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: "0.52rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Ultima OS</span>
-          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#6090c0" }}>{ultimaOs}</span>
+          <span style={{ fontSize: "0.52rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Ultima OS</span>
+          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#a0c8e8" }}>{ultimaOs}</span>
         </div>
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "6px 0 8px", gap: 5 }}>
         <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, ${cor}44)`, marginLeft: 14 }}/>
-        <span style={{ fontSize: "0.58rem", color: expanded ? cor : "#2a4060", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", transition: "color 0.2s" }}>
+        <span style={{ fontSize: "0.58rem", color: expanded ? cor : "#ffffff", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", transition: "color 0.2s" }}>
           {expanded ? "&#x25B2; Fechar" : "&#x25BC; Detalhes"}
         </span>
         <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${cor}44, transparent)`, marginRight: 14 }}/>
@@ -1174,19 +1174,19 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
               { label: "RENAVAM", value: renavam },
             ].map(f => (
               <div key={f.label} style={{ background: "rgba(0,0,0,0.35)", borderRadius: 8, padding: "8px 10px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ fontSize: "0.5rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4, fontWeight: 700 }}>{f.label}</div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#7aaad8", fontFamily: "monospace" }}>{f.value}</div>
+                <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4, fontWeight: 700 }}>{f.label}</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#a0c8e8", fontFamily: "monospace" }}>{f.value}</div>
               </div>
             ))}
           </div>
           <div style={{ background: `linear-gradient(135deg, ${cor}18 0%, transparent 60%)`, border: `1px solid ${cor}33`, borderRadius: 10, padding: "10px 14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: "0.5rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Total acumulado</div>
+                <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Total acumulado</div>
                 <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#f0c840" }}>{moeda.format(totalHon)}</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "0.5rem", color: "#2a4a6a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Servicos</div>
+                <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Servicos</div>
                 <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#30d898", lineHeight: 1 }}>{qtdOs}</div>
               </div>
             </div>
