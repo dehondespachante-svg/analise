@@ -1092,96 +1092,99 @@ function VeiculoCard({ veiculo, expanded, onToggle }: {
   return (
     <div onClick={onToggle} style={{
       borderRadius: 16, overflow: "hidden", cursor: "pointer",
-      border: expanded ? `1px solid ${cor}88` : "1px solid rgba(255,255,255,0.06)",
-      background: "linear-gradient(160deg, #0e1824 0%, #141e2e 55%, #0a1018 100%)",
+      background: "#ffffff",
+      border: expanded ? `2px solid ${cor}` : `1px solid #e5e7eb`,
       boxShadow: expanded
-        ? `0 12px 36px rgba(0,0,0,0.7), 0 0 0 1px ${cor}55, inset 0 1px 0 rgba(255,255,255,0.07)`
-        : "0 4px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)",
-      transition: "box-shadow 0.22s, border-color 0.22s, transform 0.15s",
+        ? `0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px ${cor}33`
+        : "0 2px 10px rgba(0,0,0,0.08)",
+      transition: "box-shadow 0.2s, border-color 0.2s, transform 0.15s",
     }}
     onMouseEnter={e => {
       const d = e.currentTarget as HTMLDivElement;
       d.style.transform = "translateY(-3px)";
-      d.style.boxShadow = `0 16px 40px rgba(0,0,0,0.7), 0 0 0 1px ${cor}66`;
+      d.style.boxShadow = `0 10px 28px rgba(0,0,0,0.14), 0 0 0 1px ${cor}55`;
     }}
     onMouseLeave={e => {
       const d = e.currentTarget as HTMLDivElement;
       d.style.transform = "none";
       d.style.boxShadow = expanded
-        ? `0 12px 36px rgba(0,0,0,0.7), 0 0 0 1px ${cor}55, inset 0 1px 0 rgba(255,255,255,0.07)`
-        : "0 4px 18px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.04)";
+        ? `0 8px 24px rgba(0,0,0,0.14), 0 0 0 1px ${cor}33`
+        : "0 2px 10px rgba(0,0,0,0.08)";
     }}>
 
-      <div style={{ height: 3, background: `linear-gradient(90deg, transparent 0%, ${cor} 30%, ${cor}dd 70%, transparent 100%)` }}/>
+      {/* Barra de cor no topo */}
+      <div style={{ height: 5, background: `linear-gradient(90deg, ${cor}, ${cor}bb)` }}/>
 
-      <div style={{ padding: "14px 10px 6px", background: `radial-gradient(ellipse at 50% 20%, ${cor}20 0%, transparent 68%)` }}>
+      {/* Carro */}
+      <div style={{ padding: "14px 10px 6px", background: `radial-gradient(ellipse at 50% 20%, ${cor}15 0%, transparent 70%)` }}>
         <CarSvg uid={uid} cor={cor}/>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
+      {/* Placa */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 12px" }}>
         <div style={{
-          background: "linear-gradient(180deg, #0e1a2e 0%, #0a1220 100%)",
-          border: `1.5px solid ${cor}66`, borderRadius: 7,
-          boxShadow: `0 2px 12px rgba(0,0,0,0.7), 0 0 8px ${cor}22`,
-          padding: "5px 16px", textAlign: "center",
+          background: cor, borderRadius: 6,
+          boxShadow: `0 2px 8px ${cor}55`,
+          padding: "4px 18px", textAlign: "center",
         }}>
-          <div style={{ fontSize: "0.36rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 2 }}>
+          <div style={{ fontSize: "0.32rem", color: "rgba(255,255,255,0.7)", letterSpacing: "0.2em", textTransform: "uppercase", marginBottom: 1 }}>
             {isMercosul ? "MERCOSUL" : "BRASIL"}
           </div>
-          <div style={{ fontSize: "1.1rem", fontWeight: 900, color: "#ffffff", letterSpacing: "0.22em", fontFamily: "'Courier New', monospace", lineHeight: 1, textShadow: `0 0 10px ${cor}88` }}>
+          <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#ffffff", letterSpacing: "0.2em", fontFamily: "'Courier New', monospace", lineHeight: 1 }}>
             {placa}
           </div>
         </div>
       </div>
 
-      <div style={{ margin: "0 10px 10px", borderRadius: 10, overflow: "hidden", border: "1px solid rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.3)" }}>
+      {/* Stats */}
+      <div style={{ margin: "0 12px 12px", borderRadius: 10, overflow: "hidden", border: `1px solid #f0f0f0`, background: "#f8f9fa" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1px 1fr" }}>
           <div style={{ padding: "10px 8px", textAlign: "center" }}>
-            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: "#30d898", lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{qtdOs}</div>
-            <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Ordens de Serv.</div>
+            <div style={{ fontSize: "1.6rem", fontWeight: 900, color: cor, lineHeight: 1, fontVariantNumeric: "tabular-nums" }}>{qtdOs}</div>
+            <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Ordens de Serv.</div>
           </div>
-          <div style={{ background: "rgba(255,255,255,0.07)" }}/>
+          <div style={{ background: "#e5e7eb" }}/>
           <div style={{ padding: "10px 8px", textAlign: "center" }}>
-            <div style={{ fontSize: "0.9rem", fontWeight: 900, color: "#f0c840", lineHeight: 1.1 }}>{moeda.format(totalHon)}</div>
-            <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Total Honor.</div>
+            <div style={{ fontSize: "0.85rem", fontWeight: 900, color: "#111827", lineHeight: 1.1 }}>{moeda.format(totalHon)}</div>
+            <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 3, fontWeight: 700 }}>Total Honor.</div>
           </div>
         </div>
-        <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontSize: "0.52rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Ultima OS</span>
-          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#a0c8e8" }}>{ultimaOs}</span>
+        <div style={{ borderTop: "1px solid #e5e7eb", padding: "6px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontSize: "0.52rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Ultima OS</span>
+          <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#374151" }}>{ultimaOs}</span>
         </div>
       </div>
 
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "6px 0 8px", gap: 5 }}>
-        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, transparent, ${cor}44)`, marginLeft: 14 }}/>
-        <span style={{ fontSize: "0.58rem", color: expanded ? cor : "#ffffff", fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", transition: "color 0.2s" }}>
-          {expanded ? "&#x25B2; Fechar" : "&#x25BC; Detalhes"}
+      {/* Toggle */}
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "6px 0 8px", gap: 5, borderTop: "1px solid #f0f0f0" }}>
+        <span style={{ fontSize: "0.58rem", color: cor, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+          {expanded ? "▲ Fechar" : "▼ Detalhes"}
         </span>
-        <div style={{ height: 1, flex: 1, background: `linear-gradient(90deg, ${cor}44, transparent)`, marginRight: 14 }}/>
       </div>
 
+      {/* Detalhes expandidos */}
       {expanded && (
-        <div style={{ padding: "14px 14px 16px", borderTop: `1px solid ${cor}30`, background: "linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 100%)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+        <div style={{ padding: "12px 14px 16px", borderTop: `2px solid ${cor}22`, background: "#f8f9fa" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
             {[
-              { label: "Codigo Interno", value: `#${veinumer}` },
+              { label: "Codigo", value: `#${veinumer}` },
               { label: "RENAVAM", value: renavam },
             ].map(f => (
-              <div key={f.label} style={{ background: "rgba(0,0,0,0.35)", borderRadius: 8, padding: "8px 10px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 4, fontWeight: 700 }}>{f.label}</div>
-                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#a0c8e8", fontFamily: "monospace" }}>{f.value}</div>
+              <div key={f.label} style={{ background: "#ffffff", borderRadius: 8, padding: "8px 10px", border: "1px solid #e5e7eb" }}>
+                <div style={{ fontSize: "0.5rem", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>{f.label}</div>
+                <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1f2937", fontFamily: "monospace" }}>{f.value}</div>
               </div>
             ))}
           </div>
-          <div style={{ background: `linear-gradient(135deg, ${cor}18 0%, transparent 60%)`, border: `1px solid ${cor}33`, borderRadius: 10, padding: "10px 14px" }}>
+          <div style={{ background: `${cor}12`, border: `1px solid ${cor}33`, borderRadius: 10, padding: "10px 14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Total acumulado</div>
-                <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#f0c840" }}>{moeda.format(totalHon)}</div>
+                <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Total acumulado</div>
+                <div style={{ fontSize: "1.05rem", fontWeight: 900, color: "#111827" }}>{moeda.format(totalHon)}</div>
               </div>
               <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: "0.5rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Servicos</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: "#30d898", lineHeight: 1 }}>{qtdOs}</div>
+                <div style={{ fontSize: "0.5rem", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3, fontWeight: 700 }}>Servicos</div>
+                <div style={{ fontSize: "1.4rem", fontWeight: 900, color: cor, lineHeight: 1 }}>{qtdOs}</div>
               </div>
             </div>
           </div>
