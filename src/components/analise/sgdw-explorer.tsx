@@ -565,7 +565,9 @@ function EmpresaCard({
 
   return (
     <div style={{
-      border: `1px solid ${expanded ? tier.cor : tier.borda}`,
+      borderTop: `1px solid ${expanded ? tier.cor : tier.borda}`,
+      borderRight: `1px solid ${expanded ? tier.cor : tier.borda}`,
+      borderBottom: `1px solid ${expanded ? tier.cor : tier.borda}`,
       borderLeft: `5px solid ${tier.cor}`,
       borderRadius: 10,
       background: tier.bg,
