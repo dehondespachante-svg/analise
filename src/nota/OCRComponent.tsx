@@ -2,10 +2,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { Button, Typography, Paper, TextField, IconButton, CircularProgress, Tooltip, Tabs, Tab, Divider, Chip, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, makeStyles } from '@material-ui/core';
-import { Table, TableRow, TableCell, TableBody, TableHead, TableContainer, Card, MenuItem } from '@material-ui/core';
-import { useTheme, useMediaQuery } from '@material-ui/core';
-import { InsertDriveFile, Add, FolderOpen, Delete, CloudUpload, TableChart, Build, CheckCircle, ListAlt, Download, Settings, Save, ArrowForward, ArrowBack, Description, Folder, Visibility, GetApp, Refresh } from '@material-ui/icons';
+import { Button, Typography, Paper, TextField, IconButton, CircularProgress, Tooltip, Tabs, Tab, Divider, Chip, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, makeStyles, Table, TableRow, TableCell, TableBody, TableHead, TableContainer, Card, MenuItem, useTheme, useMediaQuery } from './mui-compat';
+import { File as InsertDriveFile, Plus as Add, FolderOpen, Trash2 as Delete, CloudUpload, Table2 as TableChart, Wrench as Build, CheckCircle2 as CheckCircle, List as ListAlt, Download, Settings, Save, ArrowRight as ArrowForward, ArrowLeft as ArrowBack, FileText as Description, Folder, Eye as Visibility, Download as GetApp, RefreshCw as Refresh } from 'lucide-react';
 import * as ExcelJS from 'exceljs';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '@/logic/firebase/config/app';
@@ -1562,7 +1560,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
             {/* Header Profissional */}
             <div className={classes.header}>
               <div className={classes.headerIcon}>
-                <Build style={{ fontSize: 32 }} />
+                <Build size={32} />
                 <Typography variant={isMobile ? 'h5' as any : 'h4'} style={{ fontWeight: 700 }}>
                   OCR Inteligente
                 </Typography>
@@ -1628,8 +1626,8 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                     value={tabAtiva} 
                     onChange={(_: React.SyntheticEvent, v: number) => setTabAtiva(v)} 
                   >
-                    <Tab icon={<FolderOpen style={{ fontSize: 18 }} />} label="Modelos Salvos" />
-                    <Tab icon={<Add style={{ fontSize: 18 }} />} label="Criar Novo" />
+                    <Tab icon={<FolderOpen size={18} />} label="Modelos Salvos" />
+                    <Tab icon={<Add size={18} />} label="Criar Novo" />
                 </Tabs>
 
                 {/* Tab: Modelos Salvos */}
@@ -1637,7 +1635,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                   <div>
                     {modelosSalvos.length === 0 ? (
                       <div className={classes.emptyState}>
-                        <FolderOpen style={{ fontSize: 48, color: '#94a3b8', marginBottom: 16 }} />
+                        <FolderOpen size={48} style={{ color: '#94a3b8', marginBottom: 16 }} />
                         <Typography variant="h6" style={{ color: '#64748b', marginBottom: 8 }}>
                           Nenhum modelo salvo
                         </Typography>
@@ -1677,7 +1675,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                                 <div style={{ padding: 8, borderRadius: 12, background: modeloSelecionado?.id === modelo.id ? '#1976d2' : '#e2e8f0', color: modeloSelecionado?.id === modelo.id ? '#fff' : '#64748b' }}>
-                                  <InsertDriveFile fontSize="small" />
+                                  <InsertDriveFile size={18} />
                                 </div>
                                 <div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1685,7 +1683,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                                       {modelo.nome}
                                     </Typography>
                                     {modeloSelecionado?.id === modelo.id && (
-                                      <CheckCircle style={{ fontSize: 18, color: '#1976d2' }} />
+                                      <CheckCircle size={18} style={{ color: '#1976d2' }} />
                                     )}
                                   </div>
                                   <Typography variant="caption" style={{ color: '#64748b' }}>
@@ -1703,7 +1701,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                                   }}
                                   style={{ color: '#94a3b8' }}
                                 >
-                                  <Delete fontSize="small" />
+                                  <Delete size={18} />
                                 </IconButton>
                               </Tooltip>
                             </div>
@@ -1764,7 +1762,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                           if (file) processarArquivoModelo(file);
                         }}
                       />
-                      <CloudUpload style={{ fontSize: 48, color: arquivoModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
+                      <CloudUpload size={48} style={{ color: arquivoModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
                       <Typography variant="h6" style={{ color: '#475569', marginBottom: 8 }}>
                         {arquivoModelo ? arquivoModelo.name : 'Arraste seu arquivo modelo aqui'}
                       </Typography>
@@ -1953,7 +1951,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
           {etapaAtual === 1 && (
             <Card className={classes.ocrCard} style={{ overflow: 'hidden' }}>
               <div className={classes.contentHeader}>
-                <Description style={{ fontSize: 32 }} />
+                <Description size={32} />
                 <div>
                   <Typography variant="h6" style={{ fontWeight: 700 }}>
                     Enviar Documentos
@@ -2002,8 +2000,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                       setArquivosEntrada(prev => ([...prev, ...files] as File[]));
                     }}
                   />
-                  <CloudUpload style={{ 
-                    fontSize: 64,
+                  <CloudUpload size={64} style={{
                     color: arquivosEntrada.length > 0 ? '#4caf50' : '#90caf9',
                     marginBottom: 16
                   }} />
@@ -2025,7 +2022,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                 {arquivosEntrada.length > 0 && (
                   <div style={{ marginBottom: 24 }}>
                     <Typography variant="subtitle1" style={{ marginBottom: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Folder color="primary" />
+                      <Folder style={{ color: '#1976d2' }} />
                       Arquivos para processar ({arquivosEntrada.length})
                     </Typography>
                     <div style={{
@@ -2078,7 +2075,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                             }}
                             style={{ color: '#f44336' }}
                           >
-                            <Delete fontSize="small" />
+                            <Delete size={18} />
                           </IconButton>
                         </div>
                       ))}
@@ -2160,7 +2157,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                 alignItems: 'center',
                 gap: 16
               }}>
-                <Settings style={{ fontSize: 32 }} />
+                <Settings size={32} />
                 <div>
                   <Typography variant="h6" style={{ fontWeight: 700 }}>
                     Mapear Campos
@@ -2292,7 +2289,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                 {/* Preview dos dados aprimorado */}
                 <div style={{ marginBottom: 24 }}>
                   <Typography variant="subtitle1" style={{ marginBottom: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Visibility color="primary" />
+                    <Visibility style={{ color: '#1976d2' }} />
                     Preview dos Dados Organizados
                   </Typography>
                   <div className="ocr-table-container" style={{ 
@@ -2404,7 +2401,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                 color: '#fff',
                 textAlign: 'center'
               }}>
-                <CheckCircle style={{ fontSize: 64, marginBottom: 8, animation: 'pulse 2s infinite' }} />
+                <CheckCircle size={64} style={{ marginBottom: 8, animation: 'pulse 2s infinite' }} />
                 <Typography variant="h5" style={{ fontWeight: 700, marginBottom: 8 }}>
                   Processamento Concluído!
                 </Typography>
@@ -2477,7 +2474,7 @@ Retorne APENAS o array JSON completo com TODOS os registros:
                 {/* Preview final aprimorado */}
                 <div style={{ marginBottom: 32 }}>
                   <Typography variant="subtitle1" style={{ marginBottom: 16, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Visibility color="primary" />
+                    <Visibility style={{ color: '#1976d2' }} />
                     Preview do Resultado Final
                   </Typography>
                   <div className="ocr-table-container" style={{ 

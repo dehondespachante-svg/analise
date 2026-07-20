@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/logic/firebase/config/app';
-import { makeStyles } from '@material-ui/core/styles';
-import { Typography, Paper, Table, TableHead, TableRow, TableCell, TableBody, CircularProgress } from '@material-ui/core';
+import { makeStyles, Typography, Paper, Table, TableHead, TableRow, TableCell, TableBody, CircularProgress } from './mui-compat';
 
 const useStyles = makeStyles((theme) => ({
   page: {

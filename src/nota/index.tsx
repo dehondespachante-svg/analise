@@ -3,16 +3,8 @@ import { useSearchParams } from 'next/navigation';
 import Head from 'next/head';
 import Papa from 'papaparse';
 import { saveAs } from 'file-saver';
-import { Button, Typography, Paper, TextField, IconButton, CircularProgress, Tabs, Tab, Divider, Chip, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, makeStyles, LinearProgress } from '@material-ui/core';
-// React-19 safe Tooltip: MUI v4 accesses element.ref internally which React 19 removed.
-// This wrapper adds a native title attribute instead, avoiding the ref access entirely.
-function Tooltip({ title, children }: { title: React.ReactNode; children: React.ReactElement }) {
-  return React.cloneElement(children, { title: title != null ? String(title) : undefined });
-}
-import { Table, TableRow, TableCell, TableBody, TableHead, TableContainer, Card, MenuItem, Collapse } from '@material-ui/core';
-import { useTheme, useMediaQuery } from '@material-ui/core';
-import { InsertDriveFile, Add, FolderOpen, Delete, CloudUpload, TableChart, Build, CheckCircle, Edit, ListAlt, Download, Settings, Save, ArrowForward, ArrowBack, Description, Folder, Visibility, GetApp, Print, Refresh, ExpandMore, ExpandLess, Alarm, NotificationsActive, Schedule, Close, Autorenew, FileCopy, FilterList, Business } from '@material-ui/icons';
-import Popover from '@material-ui/core/Popover';
+import { Button, Typography, Paper, TextField, IconButton, CircularProgress, Tabs, Tab, Divider, Chip, CardContent, Dialog, DialogActions, DialogContent, DialogTitle, makeStyles, LinearProgress, Table, TableRow, TableCell, TableBody, TableHead, TableContainer, Card, MenuItem, Collapse, Tooltip, Popover, useTheme, useMediaQuery } from './mui-compat';
+import { File as InsertDriveFile, Plus as Add, FolderOpen, Trash2 as Delete, CloudUpload, Table2 as TableChart, Wrench as Build, CheckCircle2 as CheckCircle, Pencil as Edit, List as ListAlt, Download, Settings, Save, ArrowRight as ArrowForward, ArrowLeft as ArrowBack, FileText as Description, Folder, Eye as Visibility, Download as GetApp, Printer as Print, RefreshCw as Refresh, ChevronDown as ExpandMore, ChevronUp as ExpandLess, Bell as Alarm, BellRing as NotificationsActive, Clock as Schedule, X as Close, RefreshCw as Autorenew, Copy as FileCopy, Filter as FilterList, Building2 as Business } from 'lucide-react';
 import * as ExcelJS from 'exceljs';
 import { ref as rtdbRef, get as rtdbGet, push as rtdbPush, update as rtdbUpdate, remove as rtdbRemove } from 'firebase/database';
 import { collection, addDoc, doc, updateDoc, serverTimestamp, getDocs, deleteDoc, query, where, orderBy } from 'firebase/firestore';
@@ -6678,9 +6670,9 @@ Retorne APENAS o array JSON:
                     value={tabAtiva} 
                     onChange={(_: React.SyntheticEvent, v: number) => setTabAtiva(v)} 
                   >
-                    <Tab icon={<FolderOpen style={{ fontSize: 18 }} />} label="Modelos Salvos" />
-                    <Tab icon={<TableChart style={{ fontSize: 18 }} />} label="Planilhas Finalizadas" />
-                    <Tab icon={<Add style={{ fontSize: 18 }} />} label="Criar Novo" />
+                    <Tab icon={<FolderOpen size={18} />} label="Modelos Salvos" />
+                    <Tab icon={<TableChart size={18} />} label="Planilhas Finalizadas" />
+                    <Tab icon={<Add size={18} />} label="Criar Novo" />
                 </Tabs>
 
                 {/* Tab: Modelos Salvos */}
@@ -6688,7 +6680,7 @@ Retorne APENAS o array JSON:
                   <div>
                     {modelosSalvos.length === 0 ? (
                       <div className={classes.emptyState}>
-                        <FolderOpen style={{ fontSize: 48, color: '#94a3b8', marginBottom: 16 }} />
+                        <FolderOpen size={48} style={{ color: '#94a3b8', marginBottom: 16 }} />
                         <Typography variant="h6" style={{ color: '#64748b', marginBottom: 8 }}>
                           Nenhum modelo salvo
                         </Typography>
@@ -6731,7 +6723,7 @@ Retorne APENAS o array JSON:
                             <div className={classes.cardTop}>
                               <div className={classes.cardTitleWrap}>
                                 <div style={{ padding: isMobile ? 6 : 8, borderRadius: 12, background: modeloSelecionado?.id === modelo.id ? '#1976d2' : '#e2e8f0', color: modeloSelecionado?.id === modelo.id ? '#fff' : '#64748b' }}>
-                                  <InsertDriveFile fontSize="small" />
+                                  <InsertDriveFile size={18} />
                                 </div>
                                 <div style={{ minWidth: 0 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -6739,11 +6731,11 @@ Retorne APENAS o array JSON:
                                       {modelo.nome}{modelo.codigoAcesso ? ` (${modelo.codigoAcesso})` : ''}
                                     </Typography>
                                     {modeloSelecionado?.id === modelo.id && (
-                                      <CheckCircle style={{ fontSize: isMobile ? 16 : 18, color: '#1976d2' }} />
+                                      <CheckCircle size={isMobile ? 16 : 18} style={{ color: '#1976d2' }} />
                                     )}
                                     {modelo.mapeamentosSalvos && modelo.mapeamentosSalvos.length > 0 && (
                                       <Tooltip title={`${modelo.mapeamentosSalvos.length} mapeamentos salvos`}>
-                                        <Settings className={classes.hideOnSm} style={{ fontSize: isMobile ? 14 : 16, color: '#4caf50' }} />
+                                        <Settings size={isMobile ? 14 : 16} className={classes.hideOnSm} style={{ color: '#4caf50' }} />
                                       </Tooltip>
                                     )}
                                     {/* Ícone de Relógio com Status de Vencimento */}
@@ -6817,7 +6809,7 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#1976d2' }}
                                     className={classes.hideOnMd}
                                   >
-                                    <Edit fontSize="small" />
+                                    <Edit size={18} />
                                   </IconButton>
                                 </Tooltip>
 
@@ -6833,7 +6825,7 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#64748b' }}
                                     className={classes.hideOnMd}
                                   >
-                                    <FileCopy fontSize="small" />
+                                    <FileCopy size={18} />
                                   </IconButton>
                                 </Tooltip>
 
@@ -6852,7 +6844,7 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#16a34a' }}
                                     className={classes.hideOnMd}
                                   >
-                                    {finalizandoModeloId === modelo.id ? <CircularProgress size={18} /> : <Description fontSize="small" />}
+                                    {finalizandoModeloId === modelo.id ? <CircularProgress size={18} /> : <Description size={18} />}
                                   </IconButton>
                                 </Tooltip>
 
@@ -6865,7 +6857,7 @@ Retorne APENAS o array JSON:
                                     >
                                       {empresaCarregandoModeloId === modelo.id
                                         ? <CircularProgress size={16} />
-                                        : <Business fontSize="small" />}
+                                        : <Business size={18} />}
                                     </IconButton>
                                   </span>
                                 </Tooltip>
@@ -6908,7 +6900,7 @@ Retorne APENAS o array JSON:
                                         >
                                           {empresaCarregandoModeloId === modelo.id
                                             ? <CircularProgress size={16} />
-                                            : <Refresh fontSize="small" />}
+                                            : <Refresh size={18} />}
                                         </IconButton>
                                       </span>
                                     </Tooltip>
@@ -6926,7 +6918,7 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#94a3b8' }}
                                     className={classes.hideOnMd}
                                   >
-                                    <Delete fontSize="small" />
+                                    <Delete size={18} />
                                   </IconButton>
                                 </Tooltip>
                               </div>
@@ -6951,7 +6943,7 @@ Retorne APENAS o array JSON:
                             {empresaSelecionadaPorModelo[modelo.id] && (
                               <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <Chip
-                                  icon={<Business style={{ fontSize: 14 }} />}
+                                  icon={<Business size={14} />}
                                   label={empresaSelecionadaPorModelo[modelo.id].nome}
                                   size="small"
                                   style={{ backgroundColor: '#e3f2fd', color: '#1565c0', fontWeight: 600, fontSize: 11 }}
@@ -6975,7 +6967,7 @@ Retorne APENAS o array JSON:
                                     }}
                                     style={{ color: '#94a3b8', padding: 2 }}
                                   >
-                                    <Close style={{ fontSize: 14 }} />
+                                    <Close size={14} />
                                   </IconButton>
                                 </Tooltip>
                               </div>
@@ -7110,7 +7102,7 @@ Retorne APENAS o array JSON:
                                           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }} onDoubleClick={() => { setEditingColIndex(idx); setEditingColValue(c); }}>
                                             <Chip label={c} onDelete={() => setEditingModelData({ ...editingModelData, colunas: editingModelData.colunas.filter((_, i) => i !== idx) })} />
                                             <IconButton size="small" onClick={(e) => { e.stopPropagation(); setEditingColIndex(idx); setEditingColValue(c); }}>
-                                              <Edit fontSize="small" />
+                                              <Edit size={18} />
                                             </IconButton>
                                           </div>
                                         )}
@@ -7156,7 +7148,7 @@ Retorne APENAS o array JSON:
                             {/* Zona de arrastar/e colar dentro do popover */}
                             <div className={arquivosEntrada.length > 0 ? classes.uploadZoneActive : classes.uploadZoneInactive} style={{ padding: 12, width: '100%', cursor: 'pointer' }}>
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                                <CloudUpload style={{ fontSize: 40, color: '#1976d2' }} />
+                                <CloudUpload size={40} style={{ color: '#1976d2' }} />
                                 <Typography variant="subtitle1" style={{ fontWeight: 700 }}>
                                   Enviar Documentos
                                 </Typography>
@@ -7265,21 +7257,21 @@ Retorne APENAS o array JSON:
                                             {/* Visualizar no Preview principal */}
                                             <Tooltip title="Visualizar no Preview">
                                               <IconButton size="small" onClick={() => { setSelectedPlanilhaFinalizada(p); setShowPreview(true); setTabAtiva(1); setExpandedPlanilhaId(p.id || String(idx)); setTimeout(() => { document.getElementById('preview-dados-organizados')?.scrollIntoView({ behavior: 'smooth' }); }, 120); }}>
-                                                <Visibility fontSize="small" />
+                                                <Visibility size={18} />
                                               </IconButton>
                                             </Tooltip>
 
                                             {/* Baixar como Excel */}
                                             <Tooltip title="Baixar Excel">
                                               <IconButton data-ignore-preview-close size="small" onClick={() => exportarPlanilhaFinalizada(p)}>
-                                                <GetApp fontSize="small" />
+                                                <GetApp size={18} />
                                               </IconButton>
                                             </Tooltip>
 
                                             {/* Editar planilha */}
                                             <Tooltip title="Editar planilha">
                                               <IconButton size="small" onClick={() => { setPlanilhaEditing(p); setEditPlanilhaName(p.nome || p.modeloNome || ''); setEditPlanilhaOpen(true); }}>
-                                                <Edit fontSize="small" />
+                                                <Edit size={18} />
                                               </IconButton>
                                             </Tooltip>
 
@@ -7297,7 +7289,7 @@ Retorne APENAS o array JSON:
                                                   mostrarMensagem('Erro ao remover planilha', 'error');
                                                 }
                                               }}>
-                                                <Delete fontSize="small" />
+                                                <Delete size={18} />
                                               </IconButton>
                                             </Tooltip>
 
@@ -7393,7 +7385,7 @@ Retorne APENAS o array JSON:
                           if (file) processarArquivoModelo(file);
                         }}
                       />
-                      <CloudUpload style={{ fontSize: 18, color: arquivoModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
+                      <CloudUpload size={18} style={{ color: arquivoModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
                       <Typography variant="h6" style={{ color: '#475569', marginBottom: 8 }}>
                         {arquivoModelo ? arquivoModelo.name : 'Arraste seu arquivo modelo aqui'}
                       </Typography>
@@ -7420,7 +7412,7 @@ Retorne APENAS o array JSON:
                           if (file) processarArquivoMarcaModelo(file);
                         }}
                       />
-                      <CloudUpload style={{ fontSize: 18, color: arquivoMarcaModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
+                      <CloudUpload size={18} style={{ color: arquivoMarcaModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
                       <Typography variant="h6" style={{ color: '#475569', marginBottom: 8 }}>
                         {arquivoMarcaModelo ? arquivoMarcaModelo.name : 'Arraste arquivo de marca/modelo aqui'}
                       </Typography>
@@ -7812,7 +7804,7 @@ Retorne APENAS o array JSON:
                                 <span style={{ flex: 1 }}>Campo Extraído</span>
                                 <Tooltip title="Auto-configurar com nome da coluna do modelo">
                                   <IconButton size="small" onClick={() => autoConfigurarPorNomeModelo()} style={{ color: '#fff', border: '1px solid rgba(255,255,255,0.14)' }}>
-                                    <Autorenew style={{ fontSize: 16 }} />
+                                    <Autorenew size={16} />
                                   </IconButton>
                                 </Tooltip>
                               </TableCell>
@@ -7912,7 +7904,7 @@ Retorne APENAS o array JSON:
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {modeloSelecionado?.mapeamentosSalvos && modeloSelecionado.mapeamentosSalvos.length > 0 && (
                           <Chip 
-                            icon={<CheckCircle style={{ fontSize: 16 }} />}
+                            icon={<CheckCircle size={16} />}
                             label={`${modeloSelecionado.mapeamentosSalvos.length} mapeamentos salvos`}
                             size="small"
                             style={{ backgroundColor: '#e8f5e9', color: '#2e7d32' }}
@@ -7938,13 +7930,13 @@ Retorne APENAS o array JSON:
                   <div ref={previewWrapperRef} style={{ marginBottom: 24 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                       <Typography variant="subtitle1" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Visibility color="primary" />
+                        <Visibility style={{ color: '#1976d2' }} />
                         Preview dos Dados Organizados
                       </Typography>
 
                     {notificacoes.length > 0 && (
                       <Chip 
-                        icon={<NotificationsActive style={{ fontSize: 16 }} />}
+                        icon={<NotificationsActive size={16} />}
                         label={`${notificacoes.length} notificações`}
                         size="small"
                         style={{ backgroundColor: '#fff3e0', color: '#e65100', marginLeft: 8 }}
@@ -7993,11 +7985,11 @@ Retorne APENAS o array JSON:
                     {!selectedPlanilhaFinalizada ? (
                       !previewEditMode ? (
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                          <IconButton size="small" onClick={entrarEdicaoPreview} title="Editar Preview"><Edit style={{ fontSize: 18 }} /></IconButton>
+                          <IconButton size="small" onClick={entrarEdicaoPreview} title="Editar Preview"><Edit size={18} /></IconButton>
                           {/* Fechar preview quando aberto manualmente */}
                           {showPreview && (
                             <IconButton size="small" onClick={() => { setShowPreview(false); setPreviewRows(null); setPreviewEditMode(false); setSelectedPlanilhaFinalizada(null); mostrarMensagem('Preview fechado', 'info'); }} title="Fechar Preview">
-                              <Close style={{ fontSize: 18 }} />
+                              <Close size={18} />
                             </IconButton>
                           )}
                         </div>
@@ -8095,7 +8087,7 @@ Retorne APENAS o array JSON:
                               }}
                             >
                               <Tooltip title="Notificações de Vencimento">
-                                <Alarm style={{ fontSize: 18 }} />
+                                <Alarm size={18} />
                               </Tooltip>
                             </TableCell>
                             {(visibleColumnsRef.current || (selectedPlanilhaFinalizada ? (Array.isArray(selectedPlanilhaFinalizada.campos) && selectedPlanilhaFinalizada.campos.length ? selectedPlanilhaFinalizada.campos : (Array.isArray(selectedPlanilhaFinalizada.dados) && selectedPlanilhaFinalizada.dados.length ? Object.keys(selectedPlanilhaFinalizada.dados[0]) : (modeloSelecionado?.colunas || []))) : (modeloSelecionado?.colunas || []))).map((col: string, i: number) => {
@@ -8175,11 +8167,11 @@ Retorne APENAS o array JSON:
                                         }}
                                       >
                                         {notificacao ? (
-                                          vencida ? <NotificationsActive style={{ fontSize: 18 }} /> :
-                                          venceHoje ? <Schedule style={{ fontSize: 18 }} /> :
-                                          <Alarm style={{ fontSize: 18 }} />
+                                          vencida ? <NotificationsActive size={18} /> :
+                                          venceHoje ? <Schedule size={18} /> :
+                                          <Alarm size={18} />
                                         ) : (
-                                          <Alarm style={{ fontSize: 18 }} />
+                                          <Alarm size={18} />
                                         )}
                                       </IconButton>
                                     </Tooltip>
@@ -8259,7 +8251,7 @@ Retorne APENAS o array JSON:
                                   {previewEditMode && (
                                     <TableCell style={{ padding: '6px 8px', textAlign: 'center' }}>
                                       <IconButton size="small" onClick={() => apagarLinhaPreview(displayIndex)}>
-                                        <Delete style={{ fontSize: 18, color: '#d32f2f' }} />
+                                        <Delete size={18} style={{ color: '#d32f2f' }} />
                                       </IconButton>
                                     </TableCell>
                                   )}
@@ -8309,10 +8301,10 @@ Retorne APENAS o array JSON:
                                         ) : (
                                           <>
                                             <IconButton className={classes.totalButton} size="small" onClick={() => recalcularColuna(col)} title="Recalcular coluna">
-                                              <Autorenew style={{ fontSize: 16, color: '#fff' }} />
+                                              <Autorenew size={16} style={{ color: '#fff' }} />
                                             </IconButton>
                                             <IconButton className={classes.totalButton} size="small" onClick={() => showDebugTotals(col)} title="Depurar totais (mostrar linhas e parse)">
-                                              <ListAlt style={{ fontSize: 16, color: '#fff' }} />
+                                              <ListAlt size={16} style={{ color: '#fff' }} />
                                             </IconButton>
                                           </>
                                         )}
@@ -8469,7 +8461,7 @@ Retorne APENAS o array JSON:
           >
             <div style={{ padding: 20, minWidth: 280 }}>
               <Typography variant="subtitle1" style={{ fontWeight: 600, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Alarm color="primary" />
+                <Alarm style={{ color: '#1976d2' }} />
                 Definir Vencimento
               </Typography>
               
@@ -8635,7 +8627,7 @@ Retorne APENAS o array JSON:
                     onMouseEnter={e => (e.currentTarget.style.background = '#e3f2fd')}
                     onMouseLeave={e => (e.currentTarget.style.background = '#f8fafc')}
                   >
-                    <Business style={{ fontSize: 18, color: '#1976d2', flexShrink: 0 }} />
+                    <Business size={18} style={{ color: '#1976d2', flexShrink: 0 }} />
                     <Typography variant="body2" style={{ fontWeight: 500 }}>{emp.NOME}</Typography>
                   </div>
                 ))}
