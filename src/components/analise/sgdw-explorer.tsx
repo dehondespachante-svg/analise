@@ -1,11 +1,13 @@
 ﻿"use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, RefreshCw, Search, X, AlertTriangle, CheckCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Search, X, AlertTriangle, CheckCircle, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import {
   buscarCaixaSgdw, buscarClientesSgdw, buscarDadosTabelaSgdw, buscarEmpresasSgdw,
   buscarEsquemaTiposSgdw, buscarFuncionariosSgdw, buscarKpiCaixaSgdw, buscarKpiOsSgdw,
-  buscarOsSgdw, buscarOsVeiculoSgdw, buscarServicosSgdw, buscarVeiculosEmpresaSgdw, buscarVeiculosSgdw,
+  buscarOsSgdw, buscarOsVeiculoSgdw, buscarServicosSgdw, buscarTodasEmpresasSgdw,
+  buscarVeiculosEmpresaSgdw, buscarVeiculosSgdw,
   cancelarOsSgdw, listarTabelasSgdw, reativarOsSgdw,
   SGDW_EMPRESAS_POR_PAGINA, SGDW_POR_PAGINA,
 } from "@/src/features/sgdw/client";
@@ -13,14 +15,16 @@ import type {
   CaixaFiltros, OsFiltros, SgdwCaixaKpi, SgdwConfig,
   SgdwExplorerAba, SgdwOsKpi, SgdwPaginaDados,
 } from "@/src/features/sgdw/types";
+import { NovaOsModal } from "@/src/components/analise/nova-os-modal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ColDef = {
   key: string; label: string;
-  format?: "moeda" | "data" | "bool" | "lancto" | "grupo" | "saldo" | "aprazo";
+  format?: "moeda" | "data" | "hora" | "bool" | "lancto" | "grupo" | "saldo" | "aprazo" | "ostatus";
   align?: "right" | "center";
   w?: number;
+  render?: (v: unknown, row: Record<string, unknown>) => React.ReactNode;
 };
 
 type PendingAcao = { titulo: string; corpo: string; executar: () => Promise<void> };
@@ -30,15 +34,32 @@ type Notif = { tipo: "ok" | "erro"; msg: string };
 
 const COLS: Record<Exclude<SgdwExplorerAba, "schema" | "empresas">, ColDef[]> = {
   os: [
-    { key: "ORDNUMER",   label: "Nro",           w: 68 },
-    { key: "DATA",       label: "Data",           format: "data",   w: 88 },
+    { key: "ORDNUMER",   label: "N° OS",         align: "center",  w: 72 },
+    { key: "DATA",       label: "Data",           format: "data",   w: 92 },
+    { key: "HORA",       label: "Hora",           format: "hora",   align: "center", w: 58 },
     { key: "CLIENTE",    label: "Cliente" },
-    { key: "PLACA",      label: "Placa",          w: 90 },
-    { key: "SERVICO",    label: "Servico",        w: 150 },
-    { key: "HONORARIOS", label: "Honorarios",    format: "moeda",  align: "right", w: 105 },
-    { key: "RECEBIDO",   label: "Recebido",      format: "moeda",  align: "right", w: 105 },
-    { key: "SALDO",      label: "A Receber",     format: "saldo",  align: "right", w: 100 },
-    { key: "CANCELADO",  label: "Canc",          format: "bool",   align: "center", w: 42 },
+    { key: "PLACA",      label: "Placa",          align: "center",  w: 90 },
+    { key: "SERVICO",    label: "Serviço",        w: 170 },
+    { key: "HONORARIOS", label: "Honorários",    format: "moeda",  align: "right", w: 108 },
+    { key: "RECEBIDO",   label: "Recebido",      format: "moeda",  align: "right", w: 108 },
+    { key: "SALDO",      label: "A Receber",     format: "saldo",  align: "right", w: 108 },
+    {
+      key: "CANCELADO", label: "Status", align: "center", w: 86,
+      render: (v) => {
+        const canc = Number(v) === 1;
+        return (
+          <span style={{
+            display: "inline-block", padding: "2px 10px", borderRadius: 12,
+            fontSize: "0.62rem", fontWeight: 700, letterSpacing: "0.04em",
+            background: canc ? "#fde8e8" : "#e8f5ee",
+            color: canc ? "#b91c1c" : "#1a5c34",
+            border: `1px solid ${canc ? "#fca5a5" : "#86efac"}`,
+          }}>
+            {canc ? "✕ Cancelado" : "● Ativo"}
+          </span>
+        );
+      },
+    },
   ],
   clientes: [
     { key: "CLINUMER",  label: "Cod",         w: 60 },
@@ -104,17 +125,26 @@ function fmtData(v: unknown): string {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : s.slice(0, 10);
 }
 
+function fmtHora(v: unknown): string {
+  const s = String(v ?? "");
+  if (!s || s === "-" || s === "null") return "—";
+  if (/^\d{2}:\d{2}/.test(s)) return s.slice(0, 5);
+  return s;
+}
+
 function fmtCelula(v: unknown, format?: string): string {
   if (v === null || v === undefined) return "-";
   switch (format) {
-    case "moeda":  return moeda.format(Number(v));
-    case "saldo":  return Number(v) === 0 ? "Quitado" : moeda.format(Number(v));
-    case "data":   return fmtData(v);
-    case "bool":   return Number(v) === 1 ? "Canc" : "";
-    case "lancto": return String(v) === "D" ? "Deb" : "Cre";
-    case "grupo":  return String(v) === "1" || Number(v) === 1 ? "A/Rec" : "A/Pag";
-    case "aprazo": return Number(v) === -1 ? "Pago" : "Aberto";
-    default:       return String(v);
+    case "moeda":   return moeda.format(Number(v));
+    case "saldo":   return Number(v) === 0 ? "Quitado" : moeda.format(Number(v));
+    case "data":    return fmtData(v);
+    case "hora":    return fmtHora(v);
+    case "bool":    return Number(v) === 1 ? "Canc" : "";
+    case "ostatus": return Number(v) === 1 ? "✕ Cancelado" : "● Ativo";
+    case "lancto":  return String(v) === "D" ? "Deb" : "Cre";
+    case "grupo":   return String(v) === "1" || Number(v) === 1 ? "A/Rec" : "A/Pag";
+    case "aprazo":  return Number(v) === -1 ? "Pago" : "Aberto";
+    default:        return String(v);
   }
 }
 
@@ -123,6 +153,8 @@ function cellColor(v: unknown, format?: string): string {
     case "saldo":   return Number(v) <= 0 ? "#1a5c34" : "#c0392b";
     case "moeda":   return Number(v) > 0 ? "#1a5c34" : "#333";
     case "bool":    return Number(v) === 1 ? "#c0392b" : "#888";
+    case "ostatus": return Number(v) === 1 ? "#b91c1c" : "#1a5c34";
+    case "hora":    return "#6b7280";
     case "lancto":  return String(v) === "D" ? "#1a5c34" : "#c0392b";
     case "grupo":   return (String(v) === "1" || Number(v) === 1) ? "#1a5c34" : "#c0392b";
     case "aprazo":  return Number(v) === -1 ? "#1a5c34" : "#c0392b";
@@ -221,38 +253,58 @@ function KpiBar({ cards }: { cards: Array<{ label: string; valor: string; cor?: 
 // ─── Filter Bars ─────────────────────────────────────────────────────────────
 
 function OsFiltroBar({ filtros, onChange }: { filtros: OsFiltros; onChange: (f: OsFiltros) => void }) {
+  const temFiltro = !!(filtros.dataIni || filtros.dataFim || filtros.incluirCanceladas);
   return (
-    <div style={{ marginBottom: 8, padding: "9px 12px", background: "#f8fbf8", borderRadius: 8, border: "1px solid #e0e8e0", display: "flex", flexDirection: "column", gap: 7 }}>
-      {/* Preset row */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-        <span style={{ fontSize: "0.63rem", fontWeight: 700, color: "#7a9a84", textTransform: "uppercase", letterSpacing: "0.05em", marginRight: 2 }}>Periodo:</span>
-        <PresetButtons
-          dataIni={filtros.dataIni} dataFim={filtros.dataFim}
-          onSelect={(ini, fim) => onChange({ ...filtros, dataIni: ini, dataFim: fim })}
-        />
-      </div>
-      {/* Custom date row */}
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
-          De
-          <input type="date" value={filtros.dataIni ?? ""} onChange={e => onChange({ ...filtros, dataIni: e.target.value || undefined })}
-            style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
-        </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#555" }}>
-          Ate
-          <input type="date" value={filtros.dataFim ?? ""} onChange={e => onChange({ ...filtros, dataFim: e.target.value || undefined })}
-            style={{ padding: "3px 6px", borderRadius: 6, border: "1px solid #d0ddd6", fontSize: "0.72rem" }} />
-        </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", color: "#555", cursor: "pointer" }}>
-          <input type="checkbox" checked={!!filtros.incluirCanceladas} onChange={e => onChange({ ...filtros, incluirCanceladas: e.target.checked })} />
-          Incluir canceladas
-        </label>
-        {(filtros.dataIni || filtros.dataFim || filtros.incluirCanceladas) && (
+    <div style={{ marginBottom: 10, borderRadius: 8, border: "1px solid #d8e8d0", background: "#f6fbf7", overflow: "hidden" }}>
+      {/* Linha 1: Período */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderBottom: "1px solid #e0ecd8", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "#4a6555", textTransform: "uppercase", letterSpacing: "0.06em", minWidth: 48 }}>Período</span>
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+          <PresetButtons
+            dataIni={filtros.dataIni} dataFim={filtros.dataFim}
+            onSelect={(ini, fim) => onChange({ ...filtros, dataIni: ini, dataFim: fim })}
+          />
+        </div>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", marginLeft: 4 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.71rem", color: "#555" }}>
+            <span style={{ color: "#4a6555", fontWeight: 600 }}>De</span>
+            <input type="date" value={filtros.dataIni ?? ""} onChange={e => onChange({ ...filtros, dataIni: e.target.value || undefined })}
+              style={{ padding: "3px 6px", borderRadius: 5, border: "1px solid #c8dcc8", fontSize: "0.71rem" }} />
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "0.71rem", color: "#555" }}>
+            <span style={{ color: "#4a6555", fontWeight: 600 }}>Até</span>
+            <input type="date" value={filtros.dataFim ?? ""} onChange={e => onChange({ ...filtros, dataFim: e.target.value || undefined })}
+              style={{ padding: "3px 6px", borderRadius: 5, border: "1px solid #c8dcc8", fontSize: "0.71rem" }} />
+          </label>
+        </div>
+        {temFiltro && (
           <button type="button" onClick={() => onChange({})}
-            style={{ padding: "2px 8px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#fff", cursor: "pointer", fontSize: "0.7rem", color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
+            style={{ marginLeft: "auto", padding: "2px 9px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#fff", cursor: "pointer", fontSize: "0.68rem", color: "#888", display: "flex", alignItems: "center", gap: 3 }}>
             <X size={10} /> Limpar
           </button>
         )}
+      </div>
+
+      {/* Linha 2: Status */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 12px", flexWrap: "wrap" }}>
+        <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "#4a6555", textTransform: "uppercase", letterSpacing: "0.06em", minWidth: 48 }}>Status</span>
+        {(
+          [
+            { label: "Somente ativas",    val: false },
+            { label: "Incluir canceladas", val: true  },
+          ] as const
+        ).map(opt => (
+          <button key={String(opt.val)} type="button"
+            onClick={() => onChange({ ...filtros, incluirCanceladas: opt.val })}
+            style={{
+              padding: "3px 12px", borderRadius: 12, fontSize: "0.68rem", fontWeight: 600, cursor: "pointer",
+              border: `1px solid ${(!!filtros.incluirCanceladas) === opt.val ? (opt.val ? "#fca5a5" : "#86efac") : "#d0ddd6"}`,
+              background: (!!filtros.incluirCanceladas) === opt.val ? (opt.val ? "#fde8e8" : "#e8f5ee") : "#fff",
+              color: (!!filtros.incluirCanceladas) === opt.val ? (opt.val ? "#b91c1c" : "#1a5c34") : "#666",
+            }}>
+            {opt.val ? "✕ Canceladas" : "● Ativas"}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -335,11 +387,12 @@ function ConfirmModal({ acao, executando, onConfirmar, onCancelar }: {
 // ─── Data Grid ────────────────────────────────────────────────────────────────
 
 function DataGrid({
-  cols, linhas, renderAcoes,
+  cols, linhas, renderAcoes, rowStyle,
 }: {
   cols: ColDef[];
   linhas: Record<string, unknown>[];
   renderAcoes?: (row: Record<string, unknown>) => React.ReactNode;
+  rowStyle?: (row: Record<string, unknown>, i: number) => React.CSSProperties;
 }) {
   const thStyle = (c: ColDef): React.CSSProperties => ({
     padding: "7px 10px", textAlign: c.align ?? "left", fontWeight: 700,
@@ -350,7 +403,8 @@ function DataGrid({
   const tdStyle = (c: ColDef, v: unknown): React.CSSProperties => ({
     padding: "5px 10px", fontSize: "0.72rem", fontFamily: "inherit",
     textAlign: c.align ?? "left", whiteSpace: "nowrap",
-    borderBottom: "1px solid #f0f4f0", color: cellColor(v, c.format),
+    borderBottom: "1px solid #f0f4f0",
+    color: c.render ? undefined : cellColor(v, c.format),
   });
   return (
     <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid #e0e8e0" }}>
@@ -358,7 +412,7 @@ function DataGrid({
         <thead>
           <tr style={{ background: "#f4f9f5" }}>
             {cols.map(c => <th key={c.key} style={thStyle(c)}>{c.label}</th>)}
-            {renderAcoes && <th style={{ ...thStyle({ key: "_", label: "Acoes" }), width: 90, minWidth: 90 }}>Acoes</th>}
+            {renderAcoes && <th style={{ ...thStyle({ key: "_", label: "Ações" }), width: 90, minWidth: 90 }}>Ações</th>}
           </tr>
         </thead>
         <tbody>
@@ -367,12 +421,20 @@ function DataGrid({
               Nenhum registro encontrado.
             </td></tr>
           )}
-          {linhas.map((row, i) => (
-            <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f8fbf8" }}>
-              {cols.map(c => <td key={c.key} style={tdStyle(c, row[c.key])}>{fmtCelula(row[c.key], c.format)}</td>)}
-              {renderAcoes && <td style={{ padding: "4px 8px", borderBottom: "1px solid #f0f4f0" }}>{renderAcoes(row)}</td>}
-            </tr>
-          ))}
+          {linhas.map((row, i) => {
+            const baseBg = i % 2 === 0 ? "#fff" : "#f8fbf8";
+            const extra = rowStyle?.(row, i) ?? {};
+            return (
+              <tr key={i} style={{ background: baseBg, ...extra }}>
+                {cols.map(c => (
+                  <td key={c.key} style={tdStyle(c, row[c.key])}>
+                    {c.render ? c.render(row[c.key], row) : fmtCelula(row[c.key], c.format)}
+                  </td>
+                ))}
+                {renderAcoes && <td style={{ padding: "4px 8px", borderBottom: "1px solid #f0f4f0" }}>{renderAcoes(row)}</td>}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -839,8 +901,217 @@ function EmpresasTab({ config }: { config: SgdwConfig }) {
   const [expandedId, setExpandedId]     = useState<number | null>(null);
   const [veiculosMap, setVeiculosMap]   = useState<Record<number, SgdwPaginaDados>>({});
   const [carregVeicId, setCarregVeicId] = useState<number | null>(null);
+  const [exportando, setExportando]     = useState(false);
   const montado = useRef(true);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
+
+  async function handleExportarExcel() {
+    setExportando(true);
+    try {
+      const empresas = await buscarTodasEmpresasSgdw(config, busca);
+
+      const VERDE_ESCURO  = "1B6B3A";
+      const VERDE_MED     = "2E8B57";
+      const VERDE_CLARO   = "D6EEE0";
+      const CINZA_TOTAL   = "EBEBEB";
+      const BRANCO        = "FFFFFF";
+      const PRETO         = "1A1A1A";
+      const VERDE_TEXTO   = "1A5C34";
+      const VERM_TEXTO    = "C0392B";
+
+      const borda = (cor = "B0C8B8") => ({
+        top:    { style: "thin" as const, color: { rgb: cor } },
+        bottom: { style: "thin" as const, color: { rgb: cor } },
+        left:   { style: "thin" as const, color: { rgb: cor } },
+        right:  { style: "thin" as const, color: { rgb: cor } },
+      });
+      const bordaForte = (cor = VERDE_ESCURO) => ({
+        top:    { style: "medium" as const, color: { rgb: cor } },
+        bottom: { style: "medium" as const, color: { rgb: cor } },
+        left:   { style: "thin"   as const, color: { rgb: cor } },
+        right:  { style: "thin"   as const, color: { rgb: cor } },
+      });
+
+      const FMT_MOEDA = '"R$"\\ #,##0.00';
+
+      const totalHon      = empresas.reduce((s, e) => s + Number(e.TOTAL_HON ?? 0), 0);
+      const totalRec      = empresas.reduce((s, e) => s + Number(e.TOTAL_REC ?? 0), 0);
+      const totalAReceber = totalHon - totalRec;
+      const totalOS       = empresas.reduce((s, e) => s + Number(e.QTD_OS ?? 0), 0);
+      const totalVeic     = empresas.reduce((s, e) => s + Number(e.QTD_VEICULOS ?? 0), 0);
+
+      const ws: XLSX.WorkSheet = {};
+      const NCOLS = 9;
+
+      // ── Row 0: Título
+      ws["A1"] = {
+        v: "EMPRESAS COM FROTA  –  RELATÓRIO DE HONORÁRIOS",
+        t: "s",
+        s: {
+          fill: { patternType: "solid", fgColor: { rgb: VERDE_ESCURO } },
+          font: { bold: true, color: { rgb: BRANCO }, sz: 15, name: "Calibri" },
+          alignment: { horizontal: "center", vertical: "center" },
+        },
+      };
+
+      // ── Row 1: Subtítulo
+      const agora   = new Date();
+      const dataStr = agora.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+      const horaStr = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+      const filtroStr = busca ? `   |   Filtro: "${busca}"` : "";
+      ws["A2"] = {
+        v: `Gerado em: ${dataStr} às ${horaStr}   |   Total: ${empresas.length} empresas${filtroStr}`,
+        t: "s",
+        s: {
+          fill: { patternType: "solid", fgColor: { rgb: VERDE_MED } },
+          font: { color: { rgb: BRANCO }, sz: 10, name: "Calibri", italic: true },
+          alignment: { horizontal: "center", vertical: "center" },
+        },
+      };
+
+      // ── Row 2: Linha separadora vazia
+      for (let c = 0; c < NCOLS; c++) {
+        ws[XLSX.utils.encode_cell({ r: 2, c })] = {
+          v: "", t: "s",
+          s: { fill: { patternType: "solid", fgColor: { rgb: VERDE_CLARO } } },
+        };
+      }
+
+      // ── Row 3: Cabeçalhos
+      const HEADERS = [
+        { label: "#",               align: "center" },
+        { label: "Código",          align: "center" },
+        { label: "Empresa",         align: "left"   },
+        { label: "Tier",            align: "center" },
+        { label: "Veículos",        align: "center" },
+        { label: "OS",              align: "center" },
+        { label: "Honorários (R$)", align: "right"  },
+        { label: "Recebido (R$)",   align: "right"  },
+        { label: "A Receber (R$)",  align: "right"  },
+      ];
+      HEADERS.forEach(({ label, align }, ci) => {
+        ws[XLSX.utils.encode_cell({ r: 3, c: ci })] = {
+          v: label, t: "s",
+          s: {
+            fill:      { patternType: "solid", fgColor: { rgb: VERDE_MED } },
+            font:      { bold: true, color: { rgb: BRANCO }, sz: 10, name: "Calibri" },
+            alignment: { horizontal: align as "center" | "left" | "right", vertical: "center" },
+            border:    bordaForte(),
+          },
+        };
+      });
+
+      // ── Linhas de dados
+      empresas.forEach((emp, ri) => {
+        const rowIdx    = 4 + ri;
+        const bgRgb     = ri % 2 === 0 ? BRANCO : "F4FAF6";
+        const qtdVeic   = Number(emp.QTD_VEICULOS ?? 0);
+        const qtdOs     = Number(emp.QTD_OS ?? 0);
+        const hon       = Number(emp.TOTAL_HON ?? 0);
+        const rec       = Number(emp.TOTAL_REC ?? 0);
+        const saldo     = hon - rec;
+        const tier      = getTier(qtdVeic);
+        const ultimaOs  = emp.ULTIMA_OS ? fmtData(emp.ULTIMA_OS as string) : "-";
+
+        const base = {
+          fill:   { patternType: "solid" as const, fgColor: { rgb: bgRgb } },
+          font:   { sz: 9, name: "Calibri", color: { rgb: PRETO } },
+          border: borda(),
+        };
+        const center  = { ...base, alignment: { horizontal: "center" as const } };
+        const left    = { ...base, alignment: { horizontal: "left"   as const } };
+        const right   = { ...base, alignment: { horizontal: "right"  as const } };
+        const moeda   = { ...right, numFmt: FMT_MOEDA };
+        const saldoS  = {
+          ...moeda,
+          font: { ...base.font, color: { rgb: saldo < 0 ? VERM_TEXTO : saldo > 0 ? VERDE_TEXTO : PRETO } },
+        };
+
+        const cells = [
+          { v: ri + 1,                     t: "n" as const, s: center },
+          { v: Number(emp.CLINUMER ?? 0),  t: "n" as const, s: center },
+          { v: String(emp.NOME ?? "-"),    t: "s" as const, s: left   },
+          { v: `${tier.emoji} ${tier.nome}`, t: "s" as const, s: center },
+          { v: qtdVeic,                    t: "n" as const, s: center },
+          { v: qtdOs,                      t: "n" as const, s: center },
+          { v: hon,                        t: "n" as const, s: moeda  },
+          { v: rec,                        t: "n" as const, s: moeda  },
+          { v: saldo,                      t: "n" as const, s: saldoS },
+        ];
+        cells.forEach((cell, ci) => {
+          ws[XLSX.utils.encode_cell({ r: rowIdx, c: ci })] = cell;
+        });
+      });
+
+      // ── Linha de totais
+      const totalRow = 4 + empresas.length;
+      const boldBase = {
+        fill:   { patternType: "solid" as const, fgColor: { rgb: CINZA_TOTAL } },
+        font:   { bold: true, sz: 10, name: "Calibri", color: { rgb: PRETO } },
+        border: {
+          top:    { style: "medium" as const, color: { rgb: "888888" } },
+          bottom: { style: "medium" as const, color: { rgb: "888888" } },
+          left:   { style: "thin"   as const, color: { rgb: "B0B0B0" } },
+          right:  { style: "thin"   as const, color: { rgb: "B0B0B0" } },
+        },
+      };
+      const boldCenter = { ...boldBase, alignment: { horizontal: "center" as const } };
+      const boldMoeda  = { ...boldBase, alignment: { horizontal: "right"  as const }, numFmt: FMT_MOEDA };
+      const saldoTotalS = {
+        ...boldMoeda,
+        font: { ...boldBase.font, color: { rgb: totalAReceber < 0 ? VERM_TEXTO : VERDE_TEXTO } },
+      };
+
+      [
+        { v: "",          t: "s" as const, s: boldBase   },
+        { v: "",          t: "s" as const, s: boldBase   },
+        { v: "TOTAL",     t: "s" as const, s: { ...boldBase, font: { ...boldBase.font }, alignment: { horizontal: "left" as const } } },
+        { v: "",          t: "s" as const, s: boldBase   },
+        { v: totalVeic,   t: "n" as const, s: boldCenter },
+        { v: totalOS,     t: "n" as const, s: boldCenter },
+        { v: totalHon,    t: "n" as const, s: boldMoeda  },
+        { v: totalRec,    t: "n" as const, s: boldMoeda  },
+        { v: totalAReceber, t: "n" as const, s: saldoTotalS },
+      ].forEach((cell, ci) => {
+        ws[XLSX.utils.encode_cell({ r: totalRow, c: ci })] = cell;
+      });
+
+      // ── Configuração da planilha
+      ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: totalRow, c: NCOLS - 1 } });
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: NCOLS - 1 } },
+        { s: { r: 1, c: 0 }, e: { r: 1, c: NCOLS - 1 } },
+        { s: { r: 2, c: 0 }, e: { r: 2, c: NCOLS - 1 } },
+      ];
+      ws["!cols"] = [
+        { wch: 5  }, // #
+        { wch: 8  }, // Código
+        { wch: 40 }, // Empresa
+        { wch: 14 }, // Tier
+        { wch: 10 }, // Veículos
+        { wch: 8  }, // OS
+        { wch: 18 }, // Honorários
+        { wch: 18 }, // Recebido
+        { wch: 18 }, // A Receber
+      ];
+      ws["!rows"] = [
+        { hpx: 38 }, // título
+        { hpx: 22 }, // subtítulo
+        { hpx: 8  }, // separador
+        { hpx: 22 }, // cabeçalhos
+        ...Array(empresas.length).fill({ hpx: 17 }),
+        { hpx: 22 }, // totais
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Empresas com Frota");
+      XLSX.writeFile(wb, `empresas-frota-${dataStr.replace(/\//g, "-")}.xlsx`);
+    } catch (e) {
+      console.error("Erro ao exportar Excel:", e);
+    } finally {
+      setExportando(false);
+    }
+  }
 
   const carregar = useCallback(async () => {
     setCarregando(true); setErro(null);
@@ -893,6 +1164,12 @@ function EmpresasTab({ config }: { config: SgdwConfig }) {
           <button type="button" onClick={carregar} disabled={carregando}
             style={{ padding: "5px 11px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", opacity: carregando ? 0.6 : 1 }}>
             <RefreshCw size={11} style={{ animation: carregando ? "spin 1s linear infinite" : "none" }} /> Atualizar
+          </button>
+          <button type="button" onClick={handleExportarExcel} disabled={exportando || carregando}
+            title="Exportar todas as empresas para Excel"
+            style={{ padding: "5px 12px", borderRadius: 7, background: exportando ? "#cce8d8" : "#1B6B3A", border: "none", cursor: exportando ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", fontWeight: 600, color: "#fff", opacity: exportando ? 0.75 : 1, whiteSpace: "nowrap" }}>
+            <Download size={11} style={{ animation: exportando ? "spin 1s linear infinite" : "none" }} />
+            {exportando ? "Gerando..." : "Exportar Excel"}
           </button>
         </div>
       </div>
@@ -1435,6 +1712,9 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
   const [tabelas, setTabelas]           = useState<string[] | null>(null);
   const [tabelasLoading, setTabelasLoading] = useState(false);
 
+  // Nova OS modal
+  const [novaOsAberta, setNovaOsAberta] = useState(false);
+
   const montado = useRef(true);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
 
@@ -1671,6 +1951,12 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
                     {HAS_PAGINATION[aba] && total > SGDW_POR_PAGINA && ` · Pag ${pagina + 1}/${Math.ceil(total / SGDW_POR_PAGINA)}`}
                   </span>
                 )}
+                {aba === "os" && (
+                  <button type="button" onClick={() => setNovaOsAberta(true)}
+                    style={{ padding: "5px 13px", borderRadius: 7, background: "#1a5c34", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.73rem", fontWeight: 700, boxShadow: "0 2px 6px rgba(26,92,52,0.3)" }}>
+                    ✚ Nova OS
+                  </button>
+                )}
                 <button type="button" onClick={fetchDados} disabled={carregando}
                   style={{ padding: "5px 11px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", opacity: carregando ? 0.6 : 1 }}>
                   <RefreshCw size={11} style={{ animation: carregando ? "spin 1s linear infinite" : "none" }} /> Atualizar
@@ -1697,6 +1983,13 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
               <DataGrid
                 cols={cols}
                 linhas={dados.linhas}
+                rowStyle={aba === "os" ? (row) => {
+                  if (Number(row.CANCELADO) === 1)
+                    return { opacity: 0.72, background: "#fff5f5" };
+                  if (Number(row.SALDO) <= 0)
+                    return { background: "#f0fff4" };
+                  return {};
+                } : undefined}
                 renderAcoes={aba === "os" ? (row) => {
                   const cancelado = Number(row.CANCELADO) === 1;
                   return (
@@ -1727,6 +2020,15 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
       {pendingAcao && (
         <ConfirmModal acao={pendingAcao} executando={executando}
           onConfirmar={confirmarAcao} onCancelar={() => setPendingAcao(null)} />
+      )}
+
+      {/* Nova OS modal */}
+      {novaOsAberta && (
+        <NovaOsModal
+          config={config}
+          onFechar={() => setNovaOsAberta(false)}
+          onCriada={() => { setNovaOsAberta(false); fetchDados(); showNotif("ok", "OS criada com sucesso!"); }}
+        />
       )}
     </div>
   );

@@ -186,7 +186,16 @@ export async function buscarOsSgdw(
     LEFT JOIN TBVEICU v ON v.VEINUMER = o.VEINUMER
     LEFT JOIN TBSERVI s ON s.SERNUMER = o.SOSNUMER`;
   const sql = `SELECT FIRST ${SGDW_POR_PAGINA} SKIP ${skip}
-    o.ORDNUMER, o.ORDDTEMI AS DATA,
+    o.ORDNUMER,
+    o.ORDDTEMI AS DATA,
+    COALESCE(
+      (SELECT FIRST 1
+         SUBSTRING(CAST(CAST(cx.DTLANCTO AS TIMESTAMP) AS VARCHAR(30)) FROM 12 FOR 5)
+       FROM TBCAIXA cx
+       WHERE cx.CDVENDA = o.ORDNUMER AND cx.TPVENDA = 13 AND cx.ESTORNO = 0
+       ORDER BY cx.CAIXA),
+      ''
+    ) AS HORA,
     COALESCE(TRIM(c.CLINOMES), '-') AS CLIENTE,
     COALESCE(TRIM(v.VEIPLACA), '-') AS PLACA,
     COALESCE(TRIM(s.SERDESCR), '-') AS SERVICO,
@@ -225,6 +234,89 @@ export async function cancelarOsSgdw(config: SgdwConfig, ordnumer: number): Prom
 
 export async function reativarOsSgdw(config: SgdwConfig, ordnumer: number): Promise<void> {
   await sgdwPost(config, "/api/sgdw-query", { sql: "UPDATE TBORDSE SET ORDCANC = 0 WHERE ORDNUMER = ?", params: [ordnumer] });
+}
+
+// ─── Nova OS — helpers ────────────────────────────────────────────────────────
+
+export interface SgdwVeiculoInfo {
+  VEINUMER: number;
+  PLACA: string;
+  RENAVAM: string;
+}
+
+export interface SgdwClienteSimples {
+  CLINUMER: number;
+  NOME: string;
+}
+
+export interface NovaOsItem {
+  sosnumer: number;
+  descricao: string;
+  vencimento: string;
+  valor: number;
+}
+
+export async function buscarVeiculoPorPlacaSgdw(
+  config: SgdwConfig, placa: string
+): Promise<SgdwVeiculoInfo | null> {
+  const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", {
+    sql: `SELECT FIRST 1 VEINUMER, TRIM(VEIPLACA) AS PLACA, TRIM(VEIRENAV) AS RENAVAM FROM TBVEICU WHERE TRIM(VEIPLACA) = ?`,
+    params: [placa.toUpperCase().replace(/\s/g, "")],
+  });
+  const row = r.rows[0];
+  if (!row) return null;
+  return { VEINUMER: Number(row.VEINUMER), PLACA: String(row.PLACA ?? ""), RENAVAM: String(row.RENAVAM ?? "") };
+}
+
+export async function buscarClientesPorNomeSgdw(
+  config: SgdwConfig, busca: string
+): Promise<SgdwClienteSimples[]> {
+  const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", {
+    sql: `SELECT FIRST 10 CLINUMER, TRIM(CLINOMES) AS NOME FROM TBCLIEN WHERE TRIM(CLINOMES) CONTAINING '${esc(busca)}' ORDER BY CLINOMES`,
+  });
+  return r.rows.map(row => ({ CLINUMER: Number(row.CLINUMER), NOME: String(row.NOME ?? "") }));
+}
+
+export async function buscarProximaOsSgdw(config: SgdwConfig): Promise<number> {
+  const r = await sgdwPost<{ rows: [{ PROXIMO: number }] }>(config, "/api/sgdw-query", {
+    sql: `SELECT MAX(ORDNUMER) + 1 AS PROXIMO FROM TBORDSE`,
+  });
+  return Number(r.rows[0]?.PROXIMO ?? 1);
+}
+
+export async function criarOsSgdw(
+  config: SgdwConfig,
+  dados: {
+    ordnumer: number;
+    dataEmissao: string;
+    clinumer: number;
+    veinumer: number;
+    itens: NovaOsItem[];
+    acrescimo: number;
+    desconto: number;
+    obs: string;
+  }
+): Promise<number[]> {
+  const criadas: number[] = [];
+  for (let i = 0; i < dados.itens.length; i++) {
+    const item = dados.itens[i];
+    const num = dados.ordnumer + i;
+    const total = item.valor + dados.acrescimo - dados.desconto;
+    await sgdwPost(config, "/api/sgdw-query", {
+      sql: `INSERT INTO TBORDSE (
+        ORDNUMER, ORDDTEMI, ORDORIGE, SOSNUMER, VEINUMER,
+        ORDVALOR, ORDVLTOT, ORDVLDES, ORDVLADI, ORDVLACR,
+        ORDCANC, ORDTMP, ORDVLREC, ORDVLARE, ORDVLPAGO, ORDVLAPA
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 0, 2, 0, ?, 0, 0)`,
+      params: [
+        num, dados.dataEmissao, dados.clinumer, item.sosnumer, dados.veinumer,
+        item.valor, total, dados.desconto, dados.acrescimo,
+        total,
+      ],
+    });
+    criadas.push(num);
+  }
+  return criadas;
 }
 
 // ─── Clientes ─────────────────────────────────────────────────────────────────
@@ -337,6 +429,26 @@ export async function buscarKpiCaixaSgdw(config: SgdwConfig, filtros: CaixaFiltr
 // ─── Empresas / Frotas ────────────────────────────────────────────────────────
 
 export const SGDW_EMPRESAS_POR_PAGINA = 18;
+
+export async function buscarTodasEmpresasSgdw(
+  config: SgdwConfig, busca = ""
+): Promise<Record<string, unknown>[]> {
+  const wh = busca ? `WHERE TRIM(c.CLINOMES) CONTAINING '${esc(busca)}'` : "";
+  const sql = `SELECT FIRST 9999 SKIP 0
+    c.CLINUMER, TRIM(c.CLINOMES) AS NOME,
+    COUNT(DISTINCT o.VEINUMER) AS QTD_VEICULOS,
+    COUNT(o.ORDNUMER) AS QTD_OS,
+    SUM(COALESCE(o.ORDVLTOT, 0)) AS TOTAL_HON,
+    SUM(COALESCE(o.ORDVLREC, 0)) AS TOTAL_REC,
+    MAX(o.ORDDTEMI) AS ULTIMA_OS
+  FROM TBCLIEN c
+    INNER JOIN TBORDSE o ON o.ORDORIGE = c.CLINUMER AND COALESCE(o.ORDCANC, 0) = 0
+    ${wh} GROUP BY c.CLINUMER, c.CLINOMES
+    HAVING COUNT(DISTINCT o.VEINUMER) >= 2
+  ORDER BY COUNT(DISTINCT o.VEINUMER) DESC, COUNT(o.ORDNUMER) DESC`;
+  const r = await sgdwPost<{ rows: Record<string, unknown>[] }>(config, "/api/sgdw-query", { sql });
+  return r.rows;
+}
 
 export async function buscarEmpresasSgdw(
   config: SgdwConfig, pagina: number, busca = ""

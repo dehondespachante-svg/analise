@@ -5145,7 +5145,7 @@ export default function AnaliseHonorariosPage() {
         </div>
 
         {/* Nav items */}
-        {(modoAnalise === "honorarios" || modoAnalise === "sgdw") && (
+        {modoAnalise === "honorarios" && (
           <nav className={styles.sidebarNav} aria-label="Abas da analise">
             {abas.map((aba) => (
               <button
@@ -5262,8 +5262,38 @@ export default function AnaliseHonorariosPage() {
 
         {modoAnalise === "sgdw" && <SgdwConexao onRelatorio={setSgdwRelatorio} />}
 
+        {modoAnalise === "sgdw" && !!relatorioAtivo && (
+          <div style={{ background: "#fff", border: "1px solid #dde8e0", borderRadius: 12, margin: "0 0 8px", overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "#f4f9f6", borderBottom: "1px solid #dde8e0" }}>
+              <LineChartIcon size={15} style={{ color: "var(--accent)", flexShrink: 0 }} />
+              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--accent)" }}>Analise de ganhos e metas</span>
+            </div>
+            <div style={{ display: "flex", gap: 6, padding: "8px 12px", overflowX: "auto", flexWrap: "nowrap" }}>
+              {abas.map((aba) => (
+                <button
+                  key={aba.id}
+                  type="button"
+                  onClick={() => setAbaAtiva(aba.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 5,
+                    padding: "5px 12px", borderRadius: 7, fontSize: "0.76rem", fontWeight: 600,
+                    whiteSpace: "nowrap", cursor: "pointer", flexShrink: 0,
+                    background: abaAtiva === aba.id ? "var(--accent)" : "#f0f5f2",
+                    color: abaAtiva === aba.id ? "#fff" : "var(--text-secondary)",
+                    border: abaAtiva === aba.id ? "1px solid var(--accent)" : "1px solid #d0ddd6",
+                  }}
+                >
+                  {aba.icon}
+                  {aba.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className={(modoAnalise === "honorarios" || (modoAnalise === "sgdw" && !!relatorioAtivo)) ? "" : styles.modeHidden}>
         <section className={`${styles.topPanel} ${relatorioAtivo ? "" : styles.topPanelEmpty}`}>
+          {modoAnalise !== "sgdw" && (
           <div className={styles.topIntro}>
             <h1>Analise de ganhos e metas</h1>
             <p>
@@ -5271,6 +5301,7 @@ export default function AnaliseHonorariosPage() {
               servicos que puxam resultado, alertas de preco e metas de acompanhamento.
             </p>
           </div>
+          )}
           {relatorioAtivo && (
             <div className={styles.topMetric}>
               <span>{contextoAnalise.topoTitulo}</span>

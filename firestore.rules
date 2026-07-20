@@ -12,5 +12,10 @@ service cloud.firestore {
       allow read: if true;
       allow write: if request.resource.data.token == "6ad74bc2cdc8d84953ea21ad89c25715d49ad614757b8aea5c599050b5d6e6dc";
     }
+
+    // Modelos da página /nota: leitura e escrita abertas (app privado de despachante)
+    match /ModelosNota/{docId} {
+      allow read, write: if true;
+    }
   }
 }

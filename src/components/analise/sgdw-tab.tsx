@@ -122,7 +122,7 @@ export default function SgdwConexao({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sql: "SELECT 1 AS PING FROM RDB$DATABASE" }),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(35000),
       });
       if (r.ok) { setStatus("conectado"); return true; }
       const d = await r.json().catch(() => ({})) as { error?: string };
@@ -130,7 +130,9 @@ export default function SgdwConexao({
       setStatus("erro");
       return false;
     } catch (e) {
-      setErro(e instanceof Error ? e.message : "Sem resposta do SGDW.");
+      const msg = e instanceof Error ? e.message : "Sem resposta do SGDW.";
+      const isTimeout = /timed out|timeout/i.test(msg);
+      setErro(isTimeout ? "Sem resposta — servidor aguardando conexao do SGDW." : msg);
       setStatus("erro");
       return false;
     }
@@ -179,7 +181,7 @@ export default function SgdwConexao({
         const p = periodoRef.current;
         buscarDadosRef.current(p.anoInicio, p.mesInicio, p.anoFim, p.mesFim);
       }
-    }, 30_000);
+    }, 8_000);
     return () => { cancelado = true; clearInterval(id); };
   }, [status, autoConectar]);
 
