@@ -2,7 +2,8 @@
 /.next/
 /out/
 /build
-data/
+data/*.json
+
 test-results/
 dev.*.log
 .env*
