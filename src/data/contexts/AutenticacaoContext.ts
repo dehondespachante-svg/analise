@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 
 interface AutenticacaoContextType {
-  usuario?: { email?: string | null; nome?: string | null } | null;
+  usuario?: { email?: string | null; nome?: string | null; uid?: string | null } | null;
 }
 
 const AutenticacaoContext = createContext<AutenticacaoContextType>({});

@@ -1422,7 +1422,7 @@ export default function OCRInteligente() {
   
   // Estados para notificação de vencimento por linha
   const [notificacoes, setNotificacoes] = useState<NotificacaoLinha[]>([]);
-  const [popoverAnchor, setPopoverAnchor] = useState<HTMLButtonElement | null>(null);
+  const [popoverAnchor, setPopoverAnchor] = useState<HTMLElement | null>(null);
   const [linhaNotificacao, setLinhaNotificacao] = useState<number | null>(null);
   const [dataVencimento, setDataVencimento] = useState<string>('');
   const [horaNotificacao, setHoraNotificacao] = useState<string>('09:00');
@@ -3202,7 +3202,7 @@ Retorne APENAS o array JSON:
           // senão, atribuir o primeiro candidato ao primeiro registro (fallback) e distribuir os demais sequencialmente quando possível.
           if (records.length === osCandidates.length) {
             records.forEach((r, idx) => {
-              if (!hasOSKey(r) || !String(r['O.S.'] || r['OS'] || r['os'] || r[modelOsCol]).trim()) {
+              if (!hasOSKey(r) || !String(r['O.S.'] || r['OS'] || r['os'] || (modelOsCol ? r[modelOsCol] : '')).trim()) {
                 r['O.S.'] = osCandidates[idx];
                 if (modelOsCol) r[modelOsCol] = osCandidates[idx];
               }
@@ -3367,7 +3367,7 @@ Retorne APENAS o array JSON:
         console.debug('[Multas-ByOS] mapa final de multas por OS (normalized keys):', multasMap, 'raw keys:', multasMapRaw);
         // aplicar ao retorno — usar correspondência tolerante quando necessário
         records.forEach(r => {
-          const osVal = String(r['O.S.'] || r['OS'] || r['os'] || r[modelOsCol] || '');
+          const osVal = String(r['O.S.'] || r['OS'] || r['os'] || (modelOsCol ? r[modelOsCol] : '') || '');
           const osKey = normalizar(osVal);
           let applied = false;
           let appliedEntry: { sum: number; tokens: string[] } | null = null;
@@ -5800,8 +5800,8 @@ Retorne APENAS o array JSON:
   // ============ FUNÇÕES DE NOTIFICAÇÃO ============
 
   // Abrir popover para definir notificação de vencimento
-  const abrirPopoverNotificacao = (event: React.MouseEvent<HTMLButtonElement>, linhaIndex: number) => {
-    setPopoverAnchor(event.currentTarget);
+  const abrirPopoverNotificacao = (event: React.MouseEvent<Element>, linhaIndex: number) => {
+    setPopoverAnchor(event.currentTarget as HTMLElement);
     setLinhaNotificacao(linhaIndex);
     
     // Verificar se já existe notificação para esta linha

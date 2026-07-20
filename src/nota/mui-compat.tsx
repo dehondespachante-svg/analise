@@ -39,12 +39,13 @@ function styleObjToCss(selector: string, obj: Record<string, any>): string {
 
 let _injectedKeys = new Set<string>();
 
-export function makeStyles(stylesOrFactory: any) {
+type MuiThemeLike = { spacing: (n: number) => number; breakpoints: { down: (bp: string) => string } };
+type StylesFactory = (theme: MuiThemeLike) => Record<string, Record<string, any>>;
+
+export function makeStyles(stylesOrFactory: StylesFactory | Record<string, Record<string, any>>) {
   return function useStyles() {
-    const styles = typeof stylesOrFactory === 'function' ? stylesOrFactory({
-      spacing: (n: number) => n * 8,
-      breakpoints: { down: () => '' },
-    }) : stylesOrFactory;
+    const fakeTheme: MuiThemeLike = { spacing: (n) => n * 8, breakpoints: { down: () => '' } };
+    const styles = typeof stylesOrFactory === 'function' ? stylesOrFactory(fakeTheme) : stylesOrFactory;
     const keys = Object.keys(styles);
 
     // Inject CSS once on the client
@@ -388,7 +389,7 @@ interface TooltipProps {
   [key: string]: any;
 }
 export function Tooltip({ title, children }: TooltipProps) {
-  return React.cloneElement(children, { title: title != null ? String(title) : undefined });
+  return React.cloneElement(children as React.ReactElement<any>, { title: title != null ? String(title) : undefined });
 }
 
 // ─── Tabs / Tab ───────────────────────────────────────────────────────────────
@@ -671,7 +672,7 @@ export function MenuItem({ value, onClick, style, disabled, children }: MenuItem
 }
 
 // ─── Collapse ─────────────────────────────────────────────────────────────────
-interface CollapseProps { in?: boolean; children?: React.ReactNode; }
+interface CollapseProps { in?: boolean; children?: React.ReactNode; timeout?: any; unmountOnExit?: boolean; }
 export function Collapse({ in: inProp, children }: CollapseProps) {
   return inProp ? <>{children}</> : null;
 }
