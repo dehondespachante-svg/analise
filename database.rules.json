@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "sgdw-tunnel": {
+      ".read": true,
+      ".write": true
+    },
+    "sgdw-orders": {
+      ".read": true,
+      ".write": true
+    },
+    "modelos-nota": {
+      ".read": true,
+      ".write": true
+    },
+    "empresas-portal": {
+      ".read": true,
+      ".write": true
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
