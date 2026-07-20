@@ -324,12 +324,12 @@ const useAlertStyles = makeStyles((theme) => ({
   },
   // Card fixo e responsivo
   modelCardFixed: {
-    minHeight: 120,
+    minHeight: 64,
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
     overflow: 'hidden',
-    padding: 12,
+    padding: 8,
   },
   cardTop: {
     display: 'flex',
@@ -364,9 +364,9 @@ const useAlertStyles = makeStyles((theme) => ({
   },
   emptyState: {
     textAlign: 'center',
-    padding: '48px 24px',
+    padding: '24px 16px',
     background: '#f8fafc',
-    borderRadius: 24,
+    borderRadius: 12,
     border: '1px dashed #cbd5e1',
   },
   scrollableList: {
@@ -1102,6 +1102,7 @@ export default function OCRInteligente() {
   const [carregandoEmpresas, setCarregandoEmpresas] = useState(false);
   const [empresaCarregandoModeloId, setEmpresaCarregandoModeloId] = useState<string | null>(null);
   const [empresaSelecionadaPorModelo, setEmpresaSelecionadaPorModelo] = useState<Record<string, { clinumer: number; nome: string }>>(() => lsGetEmpresas());
+  const [novoModeloEmpresa, setNovoModeloEmpresa] = useState<{ CLINUMER: number; NOME: string } | null>(null);
   const [arquivoModelo, setArquivoModelo] = useState<File | null>(null);
   const [arquivoMarcaModelo, setArquivoMarcaModelo] = useState<File | null>(null);
   const [marcaModeloMap, setMarcaModeloMap] = useState<Record<string, {marca?: string; modelo?: string}> | null>(null);
@@ -2090,10 +2091,26 @@ export default function OCRInteligente() {
       const novosModelos = [modeloComId, ...modelosSalvos];
       setModelosSalvos(novosModelos);
       await selecionarModelo(modeloComId);
+      if (novoModeloEmpresa) {
+        const empVinc = { clinumer: novoModeloEmpresa.CLINUMER, nome: novoModeloEmpresa.NOME };
+        setEmpresaSelecionadaPorModelo(prev => {
+          const next = { ...prev, [modeloComId.id]: empVinc };
+          lsSaveEmpresas(next);
+          return next;
+        });
+        setModelosSalvos(prev => prev.map(m => m.id === modeloComId.id ? { ...m, empresaVinculada: empVinc } : m));
+        if (modeloComId.firestoreId) {
+          rtdbUpdate(rtdbRef(rtdb, `modelos-nota/${modeloComId.firestoreId}`), { empresaVinculada: empVinc })
+            .catch(err => console.warn('Firebase RTDB empresaVinculada save falhou', err));
+        }
+      }
       setNomeNovoModelo('');
       setCodigoNovoModelo('');
       setColunasNovoModelo(COLUNAS_PADRAO);
       setArquivoModelo(null);
+      setNovoModeloEmpresa(null);
+      setEmpresaBusca('');
+      setEmpresasResultados([]);
       setTabAtiva(0);
       mostrarMensagem('Modelo salvo com sucesso ✅', 'success');
     } catch (err) {
@@ -6637,6 +6654,27 @@ Retorne APENAS o array JSON:
           <div style={{ width: '100%', margin: 0 }}>
             <div style={{ paddingLeft: isMobile ? 12 : 24, paddingRight: isMobile ? 12 : 24, paddingTop: 12, paddingBottom: 12 }}>
 
+              {/* ─── Cabeçalho compacto ──────────────────────────────── */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 10, paddingBottom: 10, borderBottom: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: 7, background: 'linear-gradient(135deg, #1565c0 0%, #1976d2 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                    <Description size={14} />
+                  </div>
+                  <Typography style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.92rem', lineHeight: 1 }}>
+                    OCR Inteligente
+                  </Typography>
+                  <Typography style={{ color: '#94a3b8', fontSize: '0.78rem', display: isMobile ? 'none' : 'block' }}>
+                    — extraia e organize dados de documentos
+                  </Typography>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Chip label={`${modelosSalvos.length} modelos`} size="small" style={{ background: '#dbeafe', color: '#1d4ed8', fontWeight: 700, fontSize: '0.68rem', height: 20 }} />
+                  {dadosExtraidos.length > 0 && (
+                    <Chip label={`${dadosExtraidos.length} registros`} size="small" style={{ background: '#dcfce7', color: '#15803d', fontWeight: 700, fontSize: '0.68rem', height: 20 }} />
+                  )}
+                </div>
+              </div>
+
               {/* Mensagem de feedback */}
               {mensagem && (
                 <Paper 
@@ -6652,39 +6690,39 @@ Retorne APENAS o array JSON:
 
 
 
-              {/* Layout: Etapas 1 & 2 side-by-side, Etapa 3 full-width below */}
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24 }}>
+              {/* Layout principal: painel de modelos full-width */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12 }}>
                 <div>
-                  <Paper className={classes.ocrCard}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-                      <div className={classes.statCardSuccess} style={{ padding: 12, borderRadius: 16, color: '#1565c0' }}>
-                        <TableChart />
-                      </div>
-                    </div>
-                    <Typography variant="body2" style={{ color: 'var(--ocr-text-secondary)' }}>
-                      Defina as colunas que deseja na planilha final
-                    </Typography>
-                  </Paper>
-
-                  <Tabs 
-                    value={tabAtiva} 
-                    onChange={(_: React.SyntheticEvent, v: number) => setTabAtiva(v)} 
-                  >
-                    <Tab icon={<FolderOpen size={18} />} label="Modelos Salvos" />
-                    <Tab icon={<TableChart size={18} />} label="Planilhas Finalizadas" />
-                    <Tab icon={<Add size={18} />} label="Criar Novo" />
-                </Tabs>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                    <Tabs
+                      value={tabAtiva}
+                      onChange={(_: React.SyntheticEvent, v: number) => setTabAtiva(v)}
+                      style={{ minHeight: 36 }}
+                    >
+                      <Tab label="Modelos" style={{ minHeight: 36, padding: '4px 14px', fontSize: '0.8rem', minWidth: 0 }} />
+                      <Tab label="Finalizadas" style={{ minHeight: 36, padding: '4px 14px', fontSize: '0.8rem', minWidth: 0 }} />
+                      <Tab label="Criar Novo" style={{ minHeight: 36, padding: '4px 14px', fontSize: '0.8rem', minWidth: 0 }} />
+                    </Tabs>
+                    {modeloSelecionado && (
+                      <Chip
+                        label={modeloSelecionado.nome}
+                        size="small"
+                        icon={<CheckCircle size={11} />}
+                        style={{ background: '#dcfce7', color: '#15803d', fontWeight: 700, fontSize: '0.68rem', height: 22, maxWidth: 200 }}
+                      />
+                    )}
+                  </div>
 
                 {/* Tab: Modelos Salvos */}
                 {tabAtiva === 0 && (
                   <div>
                     {modelosSalvos.length === 0 ? (
                       <div className={classes.emptyState}>
-                        <FolderOpen size={48} style={{ color: '#94a3b8', marginBottom: 16 }} />
-                        <Typography variant="h6" style={{ color: '#64748b', marginBottom: 8 }}>
+                        <FolderOpen size={28} style={{ color: '#94a3b8', marginBottom: 8 }} />
+                        <Typography variant="subtitle2" style={{ color: '#64748b', marginBottom: 4 }}>
                           Nenhum modelo salvo
                         </Typography>
-                        <Typography variant="body2" style={{ color: '#94a3b8', marginBottom: 16 }}>
+                        <Typography variant="body2" style={{ color: '#94a3b8', marginBottom: 12, fontSize: '0.8rem' }}>
                           Crie um novo modelo ou importe de um arquivo Excel/CSV
                         </Typography>
                         <Button 
@@ -6703,12 +6741,12 @@ Retorne APENAS o array JSON:
                               elevation={0}
                               className={classes.modelCardFixed}
                               style={{
-                              padding: isMobile ? 10 : 12,
-                              marginBottom: isMobile ? 8 : 12,
-                              border: modeloSelecionado?.id === modelo.id 
-                                ? '2px solid #1976d2' 
+                              padding: isMobile ? 7 : 9,
+                              marginBottom: 0,
+                              border: modeloSelecionado?.id === modelo.id
+                                ? '2px solid #1976d2'
                                 : '1px solid #e6eef8',
-                              borderRadius: 12,
+                              borderRadius: 10,
                               cursor: 'pointer',
                               transition: 'all 0.18s ease',
                               background: modeloSelecionado?.id === modelo.id 
@@ -6722,8 +6760,8 @@ Retorne APENAS o array JSON:
                           >
                             <div className={classes.cardTop}>
                               <div className={classes.cardTitleWrap}>
-                                <div style={{ padding: isMobile ? 6 : 8, borderRadius: 12, background: modeloSelecionado?.id === modelo.id ? '#1976d2' : '#e2e8f0', color: modeloSelecionado?.id === modelo.id ? '#fff' : '#64748b' }}>
-                                  <InsertDriveFile size={18} />
+                                <div style={{ padding: 5, borderRadius: 8, background: modeloSelecionado?.id === modelo.id ? '#1976d2' : '#e2e8f0', color: modeloSelecionado?.id === modelo.id ? '#fff' : '#64748b', flexShrink: 0 }}>
+                                  <InsertDriveFile size={14} />
                                 </div>
                                 <div style={{ minWidth: 0 }}>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -6749,19 +6787,19 @@ Retorne APENAS o array JSON:
                                       
                                       return (
                                         <Tooltip title={tooltipText}>
-                                          <div className={classes.hideOnSm} style={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: 6,
-                                            padding: '4px 10px',
-                                            borderRadius: 16,
-                                            backgroundColor: statusVenc.status === 'vencido' ? '#ffebee' : 
+                                          <div className={classes.hideOnSm} style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 4,
+                                            padding: '2px 7px',
+                                            borderRadius: 10,
+                                            backgroundColor: statusVenc.status === 'vencido' ? '#ffebee' :
                                                            statusVenc.status === 'vermelho' ? '#ffebee' :
                                                            statusVenc.status === 'amarelo' ? '#fff8e1' : '#e8f5e9',
                                             animation: statusVenc.diasRestantes <= 2 ? 'pulse 1.5s infinite' : 'none'
                                           }}>
-                                            <Schedule style={{ 
-                                              fontSize: isMobile ? 18 : 22, 
+                                            <Schedule style={{
+                                              fontSize: 14,
                                               color: getCorStatus(statusVenc.status)
                                             }} />
                                             <Typography variant="caption" style={{ 
@@ -6809,7 +6847,7 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#1976d2' }}
                                     className={classes.hideOnMd}
                                   >
-                                    <Edit size={18} />
+                                    <Edit size={14} />
                                   </IconButton>
                                 </Tooltip>
 
@@ -6825,18 +6863,18 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#64748b' }}
                                     className={classes.hideOnMd}
                                   >
-                                    <FileCopy size={18} />
+                                    <FileCopy size={14} />
                                   </IconButton>
                                 </Tooltip>
 
-                                {/* Enviar Documentos diretamente para este modelo: texto escondido em telas pequenas, ícone sempre visível */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                {/* Enviar Documentos */}
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
                                   <IconButton size="small" onClick={(e: React.MouseEvent) => { e.stopPropagation(); setUploadPopoverAnchor(e.currentTarget as HTMLElement); setUploadPopoverModel(modelo); setUploadPopoverFiles([]); }} className={classes.compactIconButton}>
-                                    <CloudUpload />
+                                    <CloudUpload size={14} />
                                   </IconButton>
                                 </div>
 
-                                {/* Finalizar planilha -> salva cópia em PlanilhasFinalizadas (mantendo modelo intacto) */}
+                                {/* Finalizar planilha */}
                                 <Tooltip title="Finalizar planilha">
                                   <IconButton
                                     size="small"
@@ -6844,7 +6882,7 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#16a34a' }}
                                     className={classes.hideOnMd}
                                   >
-                                    {finalizandoModeloId === modelo.id ? <CircularProgress size={18} /> : <Description size={18} />}
+                                    {finalizandoModeloId === modelo.id ? <CircularProgress size={14} /> : <Description size={14} />}
                                   </IconButton>
                                 </Tooltip>
 
@@ -6856,8 +6894,8 @@ Retorne APENAS o array JSON:
                                       style={{ color: empresaSelecionadaPorModelo[modelo.id] ? '#1976d2' : '#64748b' }}
                                     >
                                       {empresaCarregandoModeloId === modelo.id
-                                        ? <CircularProgress size={16} />
-                                        : <Business size={18} />}
+                                        ? <CircularProgress size={14} />
+                                        : <Business size={14} />}
                                     </IconButton>
                                   </span>
                                 </Tooltip>
@@ -6900,7 +6938,7 @@ Retorne APENAS o array JSON:
                                         >
                                           {empresaCarregandoModeloId === modelo.id
                                             ? <CircularProgress size={16} />
-                                            : <Refresh size={18} />}
+                                            : <Refresh size={14} />}
                                         </IconButton>
                                       </span>
                                     </Tooltip>
@@ -6918,24 +6956,26 @@ Retorne APENAS o array JSON:
                                     style={{ color: '#94a3b8' }}
                                     className={classes.hideOnMd}
                                   >
-                                    <Delete size={18} />
+                                    <Delete size={14} />
                                   </IconButton>
                                 </Tooltip>
                               </div>
                             </div>
                             {modeloSelecionado?.id === modelo.id && (
-                              <div style={{ marginTop: 16, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                {modelo.colunas.slice(0, 8).map((col, i) => (
+                              <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                                {modelo.colunas.slice(0, 6).map((col, i) => (
                                   <Chip
                                     key={i}
                                     label={col}
                                     size="small"
+                                    style={{ height: 18, fontSize: '0.65rem' }}
                                   />
                                 ))}
-                                {modelo.colunas.length > 8 && (
+                                {modelo.colunas.length > 6 && (
                                   <Chip
-                                    label={`+${modelo.colunas.length - 8}`}
+                                    label={`+${modelo.colunas.length - 6}`}
                                     size="small"
+                                    style={{ height: 18, fontSize: '0.65rem' }}
                                   />
                                 )}
                               </div>
@@ -7366,183 +7406,105 @@ Retorne APENAS o array JSON:
 
                 {/* Tab: Criar Novo Modelo */}
                 {tabAtiva === 2 && (
-                  <div>
-                    {/* Upload de arquivo modelo */}
-                    <div
-                      className={`ocr-upload-zone ${arquivoModelo ? 'active' : ''}`}
-                      onDrop={handleDropModelo}
-                      onDragOver={(e: React.DragEvent) => e.preventDefault()}
-                      onClick={() => inputModeloRef.current?.click()}
-                      style={{ marginBottom: 24 }}
-                    >
-                      <input
-                        ref={inputModeloRef}
-                        type="file"
-                        accept=".xlsx,.xls,.csv"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) processarArquivoModelo(file);
-                        }}
-                      />
-                      <CloudUpload size={18} style={{ color: arquivoModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
-                      <Typography variant="h6" style={{ color: '#475569', marginBottom: 8 }}>
-                        {arquivoModelo ? arquivoModelo.name : 'Arraste seu arquivo modelo aqui'}
-                      </Typography>
-                      <Typography variant="body2" style={{ color: '#94a3b8' }}>
-                        Excel (.xlsx, .xls) ou CSV - As colunas serão detectadas automaticamente
-                      </Typography>
-                    </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-                    {/* upload adicional para arquivo de marca/modelo */}
-                    <div
-                      className={`ocr-upload-zone ${arquivoMarcaModelo ? 'active' : ''}`}
-                      onDrop={handleDropMarcaModelo}
-                      onDragOver={(e: React.DragEvent) => e.preventDefault()}
-                      onClick={() => inputMarcaModeloRef.current?.click()}
-                      style={{ marginBottom: 24 }}
-                    >
-                      <input
-                        ref={inputMarcaModeloRef}
-                        type="file"
-                        accept=".xlsx,.xls,.csv"
-                        style={{ display: 'none' }}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) processarArquivoMarcaModelo(file);
-                        }}
-                      />
-                      <CloudUpload size={18} style={{ color: arquivoMarcaModelo ? '#4caf50' : '#94a3b8', marginBottom: 16 }} />
-                      <Typography variant="h6" style={{ color: '#475569', marginBottom: 8 }}>
-                        {arquivoMarcaModelo ? arquivoMarcaModelo.name : 'Arraste arquivo de marca/modelo aqui'}
-                      </Typography>
-                      <Typography variant="body2" style={{ color: '#94a3b8' }}>
-                        Excel (.xlsx, .xls) ou CSV – deve conter placa, marca e/ou modelo
-                      </Typography>
-                    </div>
-
-                    {arquivoMarcaModelo && (
-                      <Button 
-                        size="small" 
-                        variant="outlined" 
-                        startIcon={<Delete />} 
-                        onClick={() => { setArquivoMarcaModelo(null); setMarcaModeloMap(null); }}
-                        style={{ marginBottom: 24 }}
-                      >
-                        Limpar mapa de marcas
-                      </Button>
-                    )}
-
-                    {/* Seletor manual de linha de cabeçalho */}
-                    {linhasPreview.length > 0 && (
-                      <div style={{ marginBottom: 24 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                          <Typography variant="subtitle1" style={{ fontWeight: 600, color: '#1e293b' }}>
-                            Selecione a linha de cabeçalho:
-                          </Typography>
-                          <Button 
-                            size="small"
-                            variant="outlined"
-                            onClick={() => { setLinhasPreview([]); setColunasNovoModelo([]); setArquivoModelo(null); }}
-                            startIcon={<Delete />}
-                            style={{ borderColor: '#f44336', color: '#f44336' }}
-                          >
-                            Limpar
-                          </Button>
-                        </div>
-                        <TableContainer 
-                          className="ocr-table-container"
-                          style={{ maxHeight: 280 }}
-                        >
-                          <Table size="small" stickyHeader>
-                            <TableBody>
-                              {linhasPreview.map((linha, idx) => (
-                                <TableRow 
-                                  key={idx}
-                                  onClick={() => selecionarLinhaHeader(idx)}
-                                  style={{ 
-                                    cursor: 'pointer',
-                                    backgroundColor: linhaHeaderSelecionada === idx ? '#dbeafe' : 'inherit',
-                                    transition: 'all 0.2s ease',
-                                    ...(linhaHeaderSelecionada === idx
-                                      ? { backgroundColor: '#dbeafe' }
-                                      : {}),
-                                  }}
-                                >
-                                  <TableCell style={{ 
-                                    width: 50, 
-                                    fontWeight: 700, 
-                                    color: linhaHeaderSelecionada === idx ? '#1565c0' : '#64748b',
-                                    background: linhaHeaderSelecionada === idx ? '#eff6ff' : '#f8fafc',
-                                  }}>
-                                    #{idx + 1}
-                                  </TableCell>
-                                  {linha.slice(0, isMobile ? 4 : 8).map((cell, cellIdx) => (
-                                    <TableCell 
-                                      key={cellIdx} 
-                                      style={{ 
-                                        fontSize: '0.8rem', 
-                                        maxWidth: isMobile ? 80 : 140, 
-                                        overflow: 'hidden', 
-                                        textOverflow: 'ellipsis', 
-                                        whiteSpace: 'nowrap',
-                                        fontWeight: linhaHeaderSelecionada === idx ? 600 : 400,
-                                      }}
-                                    >
-                                      {cell || '-'}
-                                    </TableCell>
-                                  ))}
-                                  {linha.length > (isMobile ? 4 : 8) && (
-                                    <TableCell style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                                      +{linha.length - (isMobile ? 4 : 8)}
-                                    </TableCell>
-                                  )}
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                        {linhaHeaderSelecionada >= 0 && colunasNovoModelo.length > 0 && (
-                          <Paper
-                            className={classes.alertSuccess}
-                            style={{ marginTop: 16, borderRadius: 8 }}
-                          >
-                            <span><strong>Linha {linhaHeaderSelecionada + 1}</strong> selecionada com <strong>{colunasNovoModelo.length}</strong> colunas</span>
-                          </Paper>
-                        )}
+                    {/* Seção 1: Arquivo */}
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: '#1565c0', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 700, flexShrink: 0 }}>1</div>
+                        <Typography style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.82rem' }}>Arquivo Modelo</Typography>
+                        <Typography style={{ color: '#94a3b8', fontSize: '0.72rem' }}>— Excel/CSV como referência de colunas (opcional)</Typography>
                       </div>
-                    )}
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8 }}>
+                        <div
+                          className={`ocr-upload-zone ${arquivoModelo ? 'active' : ''}`}
+                          onDrop={handleDropModelo}
+                          onDragOver={(e: React.DragEvent) => e.preventDefault()}
+                          onClick={() => inputModeloRef.current?.click()}
+                          style={{ padding: '10px 12px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'left' }}
+                        >
+                          <input ref={inputModeloRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) processarArquivoModelo(f); }} />
+                          <CloudUpload size={14} style={{ color: arquivoModelo ? '#4caf50' : '#94a3b8', flexShrink: 0 }} />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <Typography style={{ fontSize: '0.78rem', fontWeight: 600, color: arquivoModelo ? '#16a34a' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {arquivoModelo ? arquivoModelo.name : 'Arquivo modelo (.xlsx / .csv)'}
+                            </Typography>
+                            {!arquivoModelo && <Typography style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Colunas detectadas automaticamente</Typography>}
+                          </div>
+                          {arquivoModelo && (
+                            <IconButton size="small" onClick={e => { e.stopPropagation(); setArquivoModelo(null); setLinhasPreview([]); setColunasNovoModelo([]); }} style={{ padding: 2, flexShrink: 0 }}>
+                              <Delete style={{ fontSize: 13, color: '#f44336' }} />
+                            </IconButton>
+                          )}
+                        </div>
+                        <div
+                          className={`ocr-upload-zone ${arquivoMarcaModelo ? 'active' : ''}`}
+                          onDrop={handleDropMarcaModelo}
+                          onDragOver={(e: React.DragEvent) => e.preventDefault()}
+                          onClick={() => inputMarcaModeloRef.current?.click()}
+                          style={{ padding: '10px 12px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8, cursor: 'pointer', textAlign: 'left' }}
+                        >
+                          <input ref={inputMarcaModeloRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={(e) => { const f = e.target.files?.[0]; if (f) processarArquivoMarcaModelo(f); }} />
+                          <CloudUpload size={14} style={{ color: arquivoMarcaModelo ? '#4caf50' : '#94a3b8', flexShrink: 0 }} />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <Typography style={{ fontSize: '0.78rem', fontWeight: 600, color: arquivoMarcaModelo ? '#16a34a' : '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {arquivoMarcaModelo ? arquivoMarcaModelo.name : 'Mapa marca/modelo (opcional)'}
+                            </Typography>
+                            {!arquivoMarcaModelo && <Typography style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Placa → marca/modelo (.xlsx / .csv)</Typography>}
+                          </div>
+                          {arquivoMarcaModelo && (
+                            <IconButton size="small" onClick={e => { e.stopPropagation(); setArquivoMarcaModelo(null); setMarcaModeloMap(null); }} style={{ padding: 2, flexShrink: 0 }}>
+                              <Delete style={{ fontSize: 13, color: '#f44336' }} />
+                            </IconButton>
+                          )}
+                        </div>
+                      </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', margin: '24px 0' }}>
-                      <div style={{ flex: 1, height: 1, backgroundColor: '#e0e0e0' }} />
-                      <Typography variant="body2" style={{ margin: '0 16px', color: '#9e9e9e' }}>OU</Typography>
-                      <div style={{ flex: 1, height: 1, backgroundColor: '#e0e0e0' }} />
-                    </div>
-
-                    {/* Carregar colunas padrão */}
-                    <div style={{ marginBottom: 16 }}>
-                      <Button
-                        variant="contained"
-                        size="small"
-                        style={{ background: '#1565c0', color: '#fff', textTransform: 'none', fontWeight: 600, borderRadius: 8 }}
-                        onClick={() => setColunasNovoModelo(COLUNAS_PADRAO)}
-                      >
-                        Carregar {COLUNAS_PADRAO.length} colunas padrão
-                      </Button>
-                      {colunasNovoModelo.length > 0 && (
-                        <Typography variant="caption" style={{ marginLeft: 10, color: '#64748b' }}>
-                          Substitui as colunas atuais
-                        </Typography>
+                      {linhasPreview.length > 0 && (
+                        <div style={{ marginTop: 10 }}>
+                          <Typography style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.78rem', marginBottom: 6 }}>Selecione a linha de cabeçalho:</Typography>
+                          <TableContainer className="ocr-table-container" style={{ maxHeight: 190 }}>
+                            <Table size="small" stickyHeader>
+                              <TableBody>
+                                {linhasPreview.map((linha, idx) => (
+                                  <TableRow key={idx} onClick={() => selecionarLinhaHeader(idx)} style={{ cursor: 'pointer', backgroundColor: linhaHeaderSelecionada === idx ? '#dbeafe' : 'inherit' }}>
+                                    <TableCell style={{ width: 38, fontWeight: 700, color: linhaHeaderSelecionada === idx ? '#1565c0' : '#64748b', background: linhaHeaderSelecionada === idx ? '#eff6ff' : '#f8fafc', fontSize: '0.72rem' }}>#{idx + 1}</TableCell>
+                                    {linha.slice(0, isMobile ? 3 : 6).map((cell, ci) => (
+                                      <TableCell key={ci} style={{ fontSize: '0.73rem', maxWidth: isMobile ? 70 : 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: linhaHeaderSelecionada === idx ? 600 : 400 }}>{cell || '-'}</TableCell>
+                                    ))}
+                                    {linha.length > (isMobile ? 3 : 6) && <TableCell style={{ fontSize: '0.68rem', color: '#94a3b8' }}>+{linha.length - (isMobile ? 3 : 6)}</TableCell>}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </TableContainer>
+                          {linhaHeaderSelecionada >= 0 && colunasNovoModelo.length > 0 && (
+                            <Paper className={classes.alertSuccess} style={{ marginTop: 6, borderRadius: 6, padding: '4px 10px' }}>
+                              <Typography style={{ fontSize: '0.73rem' }}><strong>Linha {linhaHeaderSelecionada + 1}</strong> — <strong>{colunasNovoModelo.length}</strong> colunas detectadas</Typography>
+                            </Paper>
+                          )}
+                        </div>
                       )}
                     </div>
 
-                    {/* Adicionar colunas manualmente */}
-                    <div style={{ marginBottom: 24 }}>
-                      <Typography variant="subtitle2" style={{ marginBottom: 8 }}>
-                        Adicionar colunas manualmente:
-                      </Typography>
-                      <div style={{ position: 'relative' }}>
-                        <div style={{ display: 'flex', gap: 8 }}>
+                    <div style={{ height: 1, background: '#e2e8f0', margin: '0 0 14px' }} />
+
+                    {/* Seção 2: Colunas */}
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: '#1565c0', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 700, flexShrink: 0 }}>2</div>
+                        <Typography style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.82rem' }}>Colunas</Typography>
+                        {colunasNovoModelo.length > 0 && <Chip label={`${colunasNovoModelo.length} configuradas`} size="small" style={{ height: 18, fontSize: '0.62rem', background: '#dbeafe', color: '#1d4ed8', fontWeight: 700 }} />}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                        <Button variant="outlined" size="small" style={{ borderColor: '#1565c0', color: '#1565c0', textTransform: 'none', fontWeight: 600, borderRadius: 6, fontSize: '0.76rem', padding: '2px 10px' }} onClick={() => setColunasNovoModelo(COLUNAS_PADRAO)}>
+                          Usar {COLUNAS_PADRAO.length} colunas padrão
+                        </Button>
+                        <div style={{ flex: 1, height: 1, background: '#e2e8f0', minWidth: 16 }} />
+                        <Typography style={{ color: '#94a3b8', fontSize: '0.7rem' }}>ou adicione manualmente</Typography>
+                      </div>
+                      <div style={{ position: 'relative', marginBottom: colunasNovoModelo.length > 0 ? 8 : 0 }}>
+                        <div style={{ display: 'flex', gap: 6 }}>
                           <TextField
                             size="small"
                             placeholder="Nome da coluna (ou serviço SGDW)"
@@ -7552,134 +7514,119 @@ Retorne APENAS o array JSON:
                               setNovaColuna(val);
                               if (val.trim().length >= 1 && servicosSgdw.length > 0) {
                                 const termo = val.toLowerCase();
-                                const filtradas = servicosSgdw.filter(s =>
-                                  s.toLowerCase().includes(termo)
-                                ).slice(0, 8);
+                                const filtradas = servicosSgdw.filter(s => s.toLowerCase().includes(termo)).slice(0, 8);
                                 setSugestoesFiltradas(filtradas);
                                 setShowSugestoes(filtradas.length > 0);
-                              } else {
-                                setShowSugestoes(false);
-                              }
+                              } else { setShowSugestoes(false); }
                             }}
-                            onKeyPress={(e: React.KeyboardEvent) => {
-                              if (e.key === 'Enter') { adicionarColuna(); setShowSugestoes(false); }
-                            }}
+                            onKeyPress={(e: React.KeyboardEvent) => { if (e.key === 'Enter') { adicionarColuna(); setShowSugestoes(false); } }}
                             onBlur={() => setTimeout(() => setShowSugestoes(false), 150)}
                             style={{ flex: 1 }}
                             autoComplete="off"
                           />
-                          <Button
-                            variant="outlined"
-                            onClick={() => { adicionarColuna(); setShowSugestoes(false); }}
-                            startIcon={<Add />}
-                          >
-                            Adicionar
+                          <Button variant="contained" size="small" onClick={() => { adicionarColuna(); setShowSugestoes(false); }} startIcon={<Add style={{ fontSize: 13 }} />} style={{ background: '#1565c0', borderRadius: 6, textTransform: 'none', minWidth: 0, padding: '4px 12px', flexShrink: 0 }}>
+                            Add
                           </Button>
                         </div>
-                        {/* Dropdown de sugestões SGDW */}
                         {showSugestoes && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '100%',
-                            left: 0,
-                            right: 56,
-                            background: '#fff',
-                            border: '1px solid #1976d2',
-                            borderTop: 'none',
-                            borderRadius: '0 0 8px 8px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                            zIndex: 1000,
-                            maxHeight: 240,
-                            overflowY: 'auto',
-                          }}>
-                            <div style={{
-                              padding: '4px 12px',
-                              fontSize: '0.7rem',
-                              color: '#1976d2',
-                              fontWeight: 600,
-                              borderBottom: '1px solid #e3f2fd',
-                              background: '#e3f2fd',
-                            }}>
-                              Serviços SGDW
-                            </div>
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 60, background: '#fff', border: '1px solid #1976d2', borderTop: 'none', borderRadius: '0 0 8px 8px', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', zIndex: 1000, maxHeight: 200, overflowY: 'auto' }}>
+                            <div style={{ padding: '3px 10px', fontSize: '0.68rem', color: '#1976d2', fontWeight: 600, borderBottom: '1px solid #e3f2fd', background: '#e3f2fd' }}>Serviços SGDW</div>
                             {sugestoesFiltradas.map((s, i) => (
-                              <div
-                                key={i}
-                                onMouseDown={() => {
-                                  setNovaColuna(s);
-                                  setShowSugestoes(false);
-                                }}
-                                style={{
-                                  padding: '8px 12px',
-                                  cursor: 'pointer',
-                                  fontSize: '0.85rem',
-                                  borderBottom: i < sugestoesFiltradas.length - 1 ? '1px solid #f0f0f0' : 'none',
-                                  transition: 'background 0.15s',
-                                }}
-                                onMouseEnter={e => (e.currentTarget.style.background = '#e3f2fd')}
-                                onMouseLeave={e => (e.currentTarget.style.background = '')}
-                              >
+                              <div key={i} onMouseDown={() => { setNovaColuna(s); setShowSugestoes(false); }} style={{ padding: '6px 10px', cursor: 'pointer', fontSize: '0.82rem', borderBottom: i < sugestoesFiltradas.length - 1 ? '1px solid #f0f0f0' : 'none' }} onMouseEnter={e => (e.currentTarget.style.background = '#e3f2fd')} onMouseLeave={e => (e.currentTarget.style.background = '')}>
                                 {s}
                               </div>
                             ))}
                           </div>
                         )}
                       </div>
-                    </div>
-
-                    {/* Lista de colunas */}
-                    {colunasNovoModelo.length > 0 && (
-                      <div style={{ marginBottom: 24 }}>
-                        <Typography variant="subtitle2" style={{ marginBottom: 8 }}>
-                          Colunas configuradas ({colunasNovoModelo.length}):
-                        </Typography>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {colunasNovoModelo.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '8px 10px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
                           {colunasNovoModelo.map((col, i) => (
-                            <Chip
-                              key={i}
-                              label={col}
-                              onDelete={() => removerColuna(i)}
-                              color="primary"
-                              variant="outlined"
-                              style={{ marginRight: 8, marginBottom: 8 }}
-                            />
+                            <Chip key={i} label={col} onDelete={() => removerColuna(i)} size="small" color="primary" variant="outlined" style={{ height: 22, fontSize: '0.7rem' }} />
                           ))}
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
-                    {/* Nome do modelo */}
-                    <TextField
-                      fullWidth
-                      label="Nome do modelo"
-                      value={nomeNovoModelo}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNomeNovoModelo(e.target.value)}
-                      style={{ marginBottom: 16 }}
-                    />
-                    <TextField
-                      fullWidth
-                      label="Código de acesso (empresa/modelo)"
-                      value={codigoNovoModelo}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCodigoNovoModelo(e.target.value)}
-                      style={{ marginBottom: 16 }}
-                    />
-                    <Button
-                      variant="contained"
-                      style={{
-                        background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-                        borderRadius: 8,
-                        paddingLeft: 32,
-                        paddingRight: 32,
-                        fontWeight: 600
-                      }}
-                      onClick={salvarModelo}
-                      startIcon={<Save />}
-                      disabled={
-                        colunasNovoModelo.length === 0 || !nomeNovoModelo.trim()
-                      }
-                    >
-                      Salvar Modelo
-                    </Button>
+                    <div style={{ height: 1, background: '#e2e8f0', margin: '0 0 14px' }} />
+
+                    {/* Seção 3: Identificação */}
+                    <div style={{ marginBottom: 14 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: '#1565c0', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 700, flexShrink: 0 }}>3</div>
+                        <Typography style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.82rem' }}>Identificação</Typography>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 8 }}>
+                        <TextField size="small" fullWidth label="Nome do modelo" value={nomeNovoModelo} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNomeNovoModelo(e.target.value)} />
+                        <TextField size="small" fullWidth label="Código de acesso" value={codigoNovoModelo} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCodigoNovoModelo(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div style={{ height: 1, background: '#e2e8f0', margin: '0 0 14px' }} />
+
+                    {/* Seção 4: Empresa SGDW */}
+                    <div style={{ marginBottom: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: '#0d9488', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontWeight: 700, flexShrink: 0 }}>4</div>
+                        <Typography style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.82rem' }}>Empresa SGDW</Typography>
+                        <Typography style={{ color: '#94a3b8', fontSize: '0.72rem' }}>(opcional)</Typography>
+                        {novoModeloEmpresa && (
+                          <Chip label={novoModeloEmpresa.NOME} onDelete={() => { setNovoModeloEmpresa(null); }} size="small" icon={<Business style={{ fontSize: 12 }} />} style={{ height: 22, fontSize: '0.7rem', background: '#dbeafe', color: '#1d4ed8', fontWeight: 600, maxWidth: 220 }} />
+                        )}
+                      </div>
+                      {!novoModeloEmpresa ? (
+                        <div>
+                          <TextField
+                            size="small"
+                            fullWidth
+                            placeholder="Buscar empresa para vincular..."
+                            value={empresaBusca}
+                            onChange={e => onEmpresaBuscaChange(e.target.value)}
+                            style={{ marginBottom: 6 }}
+                            InputProps={{ endAdornment: carregandoEmpresas ? <CircularProgress size={14} /> : null }}
+                          />
+                          {empresasResultados.length > 0 && (
+                            <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                              {empresasResultados.map(emp => (
+                                <div
+                                  key={emp.CLINUMER}
+                                  onClick={() => { setNovoModeloEmpresa(emp); setEmpresaBusca(''); setEmpresasResultados([]); }}
+                                  style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #f1f5f9', fontSize: '0.82rem', fontWeight: 500 }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = '#eff6ff')}
+                                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                                >
+                                  <Business style={{ fontSize: 14, color: '#1976d2', flexShrink: 0 }} />
+                                  {emp.NOME}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {!carregandoEmpresas && empresaBusca.trim() && empresasResultados.length === 0 && (
+                            <Typography style={{ fontSize: '0.73rem', color: '#94a3b8', padding: '4px 0' }}>Nenhuma empresa encontrada</Typography>
+                          )}
+                        </div>
+                      ) : (
+                        <Typography style={{ fontSize: '0.75rem', color: '#64748b' }}>Empresa vinculada ao modelo após salvar</Typography>
+                      )}
+                    </div>
+
+                    {/* Botão salvar */}
+                    <div style={{ paddingTop: 12, borderTop: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                      <Button
+                        variant="contained"
+                        style={{ background: colunasNovoModelo.length === 0 || !nomeNovoModelo.trim() ? undefined : 'linear-gradient(135deg, #1565c0 0%, #1976d2 100%)', borderRadius: 8, paddingLeft: 24, paddingRight: 24, fontWeight: 700, textTransform: 'none', fontSize: '0.85rem' }}
+                        onClick={salvarModelo}
+                        startIcon={<Save style={{ fontSize: 15 }} />}
+                        disabled={colunasNovoModelo.length === 0 || !nomeNovoModelo.trim()}
+                      >
+                        Salvar Modelo
+                      </Button>
+                      {(colunasNovoModelo.length === 0 || !nomeNovoModelo.trim()) && (
+                        <Typography style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                          {!nomeNovoModelo.trim() ? 'Digite um nome para o modelo' : 'Adicione pelo menos uma coluna'}
+                        </Typography>
+                      )}
+                    </div>
                   </div>
                 )}
 

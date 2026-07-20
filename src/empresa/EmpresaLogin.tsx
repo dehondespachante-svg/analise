@@ -32,14 +32,8 @@ export default function EmpresaLogin() {
           }
         });
       }
-      if (!empresa) {
-        setErro('Código não encontrado. Verifique com o despachante.');
-        return;
-      }
-      if (!empresa || !(empresa as EmpresaPortal).ativo) {
-        setErro('Acesso inativo. Entre em contato com o despachante.');
-        return;
-      }
+      if (!empresa) { setErro('Código não encontrado. Verifique com o despachante.'); return; }
+      if (!(empresa as EmpresaPortal).ativo) { setErro('Acesso inativo. Entre em contato com o despachante.'); return; }
       sessionStorage.setItem('empresa-portal', JSON.stringify(empresa));
       router.push('/empresa/dashboard');
     } catch {
@@ -50,26 +44,61 @@ export default function EmpresaLogin() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f2744 0%,#1a4a8a 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: 'system-ui,sans-serif' }}>
-      <div style={{ background: '#fff', borderRadius: 16, padding: '44px 40px', width: '100%', maxWidth: 420, boxShadow: '0 24px 64px rgba(0,0,0,0.35)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#1a4a8a', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+    <div style={{
+      minHeight: '100vh',
+      background: '#0b1e12',
+      backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 0%,rgba(28,184,112,0.22) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(13,90,50,0.28) 0%,transparent 60%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24, fontFamily: 'system-ui,sans-serif',
+    }}>
+      {/* Card */}
+      <div style={{
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.12)',
+        backdropFilter: 'blur(32px)',
+        borderRadius: 24, padding: '52px 44px',
+        width: '100%', maxWidth: 420,
+        boxShadow: '0 32px 80px rgba(0,0,0,0.55)',
+      }}>
+        {/* Logo */}
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 18,
+            background: 'rgba(28,184,112,0.18)',
+            border: '1.5px solid rgba(28,184,112,0.4)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 20, boxShadow: '0 8px 24px rgba(28,184,112,0.25)',
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1cb870" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v5a2 2 0 0 1-2 2z"/>
+              <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
             </svg>
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 700, color: '#0f2744' }}>Portal da Empresa</h1>
-          <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: '0.9rem' }}>Acesse com seu código único</p>
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em', color: '#1cb870', textTransform: 'uppercase', marginBottom: 6 }}>
+            Dehon Despachante
+          </div>
+          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.02em' }}>
+            Portal da Empresa
+          </h1>
+          <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem' }}>
+            Acesse com seu código único de cliente
+          </p>
         </div>
 
+        {/* Erro */}
         {erro && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px', marginBottom: 20, color: '#b91c1c', fontSize: '0.875rem' }}>
+          <div style={{
+            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)',
+            borderRadius: 12, padding: '12px 16px', marginBottom: 24,
+            color: '#fca5a5', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             {erro}
           </div>
         )}
 
         <form onSubmit={handleLogin}>
-          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#374151', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             Código de Acesso
           </label>
           <input
@@ -78,22 +107,48 @@ export default function EmpresaLogin() {
             onChange={e => setCodigo(e.target.value.toUpperCase())}
             placeholder="Ex: BARIGUI2024"
             autoFocus
-            style={{ width: '100%', padding: '13px 16px', border: '2px solid #e2e8f0', borderRadius: 10, fontSize: '1.15rem', fontFamily: 'monospace', letterSpacing: '0.12em', boxSizing: 'border-box', outline: 'none', marginBottom: 20, transition: 'border-color 0.15s' }}
-            onFocus={e => (e.target.style.borderColor = '#1a4a8a')}
-            onBlur={e => (e.target.style.borderColor = '#e2e8f0')}
+            style={{
+              width: '100%', padding: '14px 18px',
+              background: 'rgba(255,255,255,0.07)',
+              border: '1.5px solid rgba(255,255,255,0.14)',
+              borderRadius: 12, fontSize: '1.2rem',
+              fontFamily: 'monospace', letterSpacing: '0.14em',
+              boxSizing: 'border-box', outline: 'none',
+              color: '#fff', marginBottom: 20,
+              transition: 'border-color 0.18s, box-shadow 0.18s',
+            }}
+            onFocus={e => { e.target.style.borderColor = '#1cb870'; e.target.style.boxShadow = '0 0 0 3px rgba(28,184,112,0.18)'; }}
+            onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.14)'; e.target.style.boxShadow = 'none'; }}
           />
           <button
             type="submit"
             disabled={loading}
-            style={{ width: '100%', padding: '14px', background: loading ? '#93c5fd' : '#1a4a8a', color: '#fff', border: 'none', borderRadius: 10, fontSize: '1rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer', letterSpacing: '0.03em' }}
+            style={{
+              width: '100%', padding: '15px',
+              background: loading ? 'rgba(28,184,112,0.4)' : '#1cb870',
+              color: '#fff', border: 'none', borderRadius: 12,
+              fontSize: '0.95rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer',
+              letterSpacing: '0.04em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: loading ? 'none' : '0 4px 16px rgba(28,184,112,0.4)',
+              transition: 'all 0.18s',
+            }}
           >
-            {loading ? 'Verificando...' : 'Entrar'}
+            {loading ? (
+              <>
+                <svg width="18" height="18" viewBox="0 0 40 40" style={{ animation: 'spin 1s linear infinite' }}>
+                  <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+                  <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="4" strokeDasharray="60 20" strokeLinecap="round"/>
+                </svg>
+                Verificando...
+              </>
+            ) : 'Entrar →'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 28, paddingTop: 20, borderTop: '1px solid #f1f5f9' }}>
-          <a href="/empresa/cadastro" style={{ color: '#1a4a8a', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 500 }}>
-            Primeiro acesso? Cadastre sua empresa →
+        <div style={{ textAlign: 'center', marginTop: 32, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.83rem' }}>Primeiro acesso? </span>
+          <a href="/empresa/cadastro" style={{ color: '#1cb870', textDecoration: 'none', fontSize: '0.83rem', fontWeight: 700 }}>
+            Cadastrar empresa →
           </a>
         </div>
       </div>
