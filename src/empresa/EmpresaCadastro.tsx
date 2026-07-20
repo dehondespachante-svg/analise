@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef } from 'react';
-import { ref as rtdbRef, push, get, query as rtdbQuery, orderByChild, equalTo } from 'firebase/database';
+import { ref as rtdbRef, push, get } from 'firebase/database';
 import { rtdb } from '@/logic/firebase/config/app';
 import { sgdwBuscarEmpresas } from './sgdw';
 import type { EmpresaPortal } from './sgdw';
@@ -54,12 +54,16 @@ export default function EmpresaCadastro() {
 
     setLoading(true);
     try {
-      // Verificar se código já existe
-      const snap = await get(rtdbQuery(rtdbRef(rtdb, 'empresas-portal'), orderByChild('codigo'), equalTo(cod)));
+      // Verificar se código já existe (leitura de todos e filtro client-side)
+      const snap = await get(rtdbRef(rtdb, 'empresas-portal'));
       if (snap.exists()) {
-        setErro('Este código já está em uso. Escolha outro.');
-        setLoading(false);
-        return;
+        let duplicado = false;
+        snap.forEach(child => { if (child.val()?.codigo === cod) duplicado = true; });
+        if (duplicado) {
+          setErro('Este código já está em uso. Escolha outro.');
+          setLoading(false);
+          return;
+        }
       }
       const payload: EmpresaPortal = {
         nome: nome.trim(),

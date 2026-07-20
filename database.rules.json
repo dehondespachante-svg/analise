@@ -14,7 +14,8 @@
     },
     "empresas-portal": {
       ".read": true,
-      ".write": true
+      ".write": true,
+      ".indexOn": ["codigo"]
     },
     "$other": {
       ".read": false,

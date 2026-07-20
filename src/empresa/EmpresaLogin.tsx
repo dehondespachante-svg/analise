@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ref as rtdbRef, get, query as rtdbQuery, orderByChild, equalTo } from 'firebase/database';
+import { ref as rtdbRef, get } from 'firebase/database';
 import { rtdb } from '@/logic/firebase/config/app';
 import type { EmpresaPortal } from './sgdw';
 
@@ -23,15 +23,19 @@ export default function EmpresaLogin() {
     setLoading(true);
     setErro('');
     try {
-      const snap = await get(rtdbQuery(rtdbRef(rtdb, 'empresas-portal'), orderByChild('codigo'), equalTo(cod)));
-      if (!snap.exists()) {
+      const snap = await get(rtdbRef(rtdb, 'empresas-portal'));
+      let empresa: EmpresaPortal | null = null;
+      if (snap.exists()) {
+        snap.forEach(child => {
+          if (!empresa && child.val()?.codigo === cod) {
+            empresa = { id: child.key ?? undefined, ...child.val() } as EmpresaPortal;
+          }
+        });
+      }
+      if (!empresa) {
         setErro('Código não encontrado. Verifique com o despachante.');
         return;
       }
-      let empresa: EmpresaPortal | null = null;
-      snap.forEach(child => {
-        if (!empresa) empresa = { id: child.key ?? undefined, ...child.val() } as EmpresaPortal;
-      });
       if (!empresa || !(empresa as EmpresaPortal).ativo) {
         setErro('Acesso inativo. Entre em contato com o despachante.');
         return;
