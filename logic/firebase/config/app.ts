@@ -16,4 +16,5 @@ const app =
   getApps().find((a) => a.name === 'client') || initializeApp(config, 'client');
 
 export const db = getFirestore(app);
-export const rtdb = getDatabase(app);
+// getDatabase requires a valid databaseURL — guard so server-side pre-render doesn't throw
+export const rtdb = config.databaseURL ? getDatabase(app) : (null as any);
