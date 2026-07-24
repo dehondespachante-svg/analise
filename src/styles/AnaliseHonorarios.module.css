@@ -2,6 +2,65 @@
    DESIGN SYSTEM — iOS / Glassmorphism
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Animated background ─────────────────────────────────────────────────── */
+
+@keyframes orbA {
+  0%, 100% { transform: translate(0, 0); }
+  50%       { transform: translate(60px, -80px); }
+}
+@keyframes orbB {
+  0%, 100% { transform: translate(0, 0); }
+  50%       { transform: translate(-50px, 60px); }
+}
+@keyframes orbC {
+  0%, 100% { transform: translate(0, 0); }
+  50%       { transform: translate(40px, 40px); }
+}
+
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: var(--bg-page);
+}
+
+.orbA {
+  position: absolute;
+  width: 700px; height: 700px;
+  left: -12%; top: -18%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16,185,129,.13) 0%, transparent 60%);
+  animation: orbA 13s ease-in-out infinite;
+}
+
+.orbB {
+  position: absolute;
+  width: 560px; height: 560px;
+  right: -8%; bottom: 5%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100,116,139,.10) 0%, transparent 60%);
+  animation: orbB 16s ease-in-out infinite;
+}
+
+.orbC {
+  position: absolute;
+  width: 420px; height: 420px;
+  left: 38%; bottom: -14%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16,185,129,.08) 0%, transparent 60%);
+  animation: orbC 19s ease-in-out infinite;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(15,23,42,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
 /* ── Page shell ─────────────────────────────────────────────────────────── */
 
 .page {
@@ -11,9 +70,7 @@
   padding: 0;
   overflow: hidden;
   background: var(--bg-page);
-  background-image:
-    radial-gradient(ellipse 80% 60% at 20% 0%, rgba(28, 184, 112, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(13, 90, 50, 0.22) 0%, transparent 60%);
+  position: relative;
   color: var(--text-primary) !important;
   font-family: var(--font-sans-pro), Inter, -apple-system, Arial, sans-serif;
 }
@@ -34,9 +91,12 @@
   z-index: 200;
   display: flex;
   flex-direction: column;
-  background: var(--bg-sidebar);
-  background-image: linear-gradient(180deg, rgba(28,184,112,0.08) 0%, transparent 40%);
-  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background-image: linear-gradient(180deg, rgba(16,185,129,0.07) 0%, transparent 35%);
+  border-right: 1px solid rgba(16, 185, 129, 0.14);
+  box-shadow: 4px 0 28px rgba(0, 0, 0, 0.05), inset -1px 0 0 rgba(255, 255, 255, 0.85);
   overflow: hidden;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -53,7 +113,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #ffffff !important;
+  color: var(--text-primary) !important;
   font-size: 1.05rem;
   font-weight: 600;
 }
@@ -76,14 +136,14 @@
   height: 30px;
   border: 0;
   border-radius: 8px;
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.7) !important;
+  background: rgba(15,23,42,0.06);
+  color: var(--text-muted) !important;
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s;
 }
 
-.sidebarClose:hover { background: rgba(255,255,255,0.15); }
+.sidebarClose:hover { background: rgba(15,23,42,0.1); }
 
 /* Mode toggle inside sidebar */
 .sidebarModeToggle {
@@ -92,8 +152,8 @@
   gap: 3px;
   margin: 0 12px 16px;
   padding: 4px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(15,23,42,0.04);
+  border: 1px solid rgba(15,23,42,0.1);
   border-radius: 10px;
   flex-shrink: 0;
 }
@@ -108,7 +168,7 @@
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: rgba(255,255,255,0.5) !important;
+  color: var(--text-muted) !important;
   font: inherit;
   font-size: 0.80rem;
   font-weight: 700;
@@ -117,12 +177,12 @@
   white-space: nowrap;
 }
 
-.sidebarModeBtn:hover { color: rgba(255,255,255,0.82) !important; background: rgba(255,255,255,0.07); }
+.sidebarModeBtn:hover { color: var(--text-primary) !important; background: rgba(15,23,42,0.06); }
 
 .sidebarModeBtnActive {
   background: var(--accent) !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 10px rgba(28, 184, 112, 0.35);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.3);
 }
 
 /* Sidebar navigation */
@@ -135,11 +195,11 @@
   flex-direction: column;
   gap: 2px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  scrollbar-color: rgba(15,23,42,0.12) transparent;
 }
 
 .sidebarNav::-webkit-scrollbar { width: 4px; }
-.sidebarNav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+.sidebarNav::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); border-radius: 4px; }
 
 .sidebarNavItem {
   display: flex;
@@ -150,7 +210,7 @@
   border: 0;
   border-radius: 10px;
   background: transparent;
-  color: rgba(255,255,255,0.55) !important;
+  color: var(--text-secondary) !important;
   font: inherit;
   font-size: 0.84rem;
   font-weight: 600;
@@ -160,8 +220,8 @@
 }
 
 .sidebarNavItem:hover {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.88) !important;
+  background: rgba(15,23,42,0.05);
+  color: var(--text-primary) !important;
 }
 
 .sidebarNavActive {
@@ -186,7 +246,7 @@
 /* Sidebar footer / upload area */
 .sidebarFooter {
   padding: 12px;
-  border-top: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid rgba(15,23,42,0.08);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -249,10 +309,10 @@
   justify-content: center;
   gap: 6px;
   padding: 8px 10px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(15,23,42,0.12);
   border-radius: 8px;
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.6) !important;
+  background: rgba(15,23,42,0.04);
+  color: var(--text-muted) !important;
   font: inherit;
   font-size: 0.78rem;
   font-weight: 600;
@@ -261,7 +321,7 @@
   white-space: nowrap;
 }
 
-.sidebarGhostBtn:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9) !important; }
+.sidebarGhostBtn:hover { background: rgba(15,23,42,0.08); color: var(--text-primary) !important; }
 .sidebarGhostBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* ── Sidebar overlay (mobile) ────────────────────────────────────────────── */
@@ -290,10 +350,37 @@
   flex-direction: column;
   height: 100vh;
   overflow: hidden;
-  background: #edf2ee;
+  background: transparent;
+  position: relative;
+  z-index: 1;
 }
 
-/* ── Glass header ────────────────────────────────────────────────────────── */
+/* ── Mobile hamburger FAB (replaces header-based hamburger) ─────────────── */
+
+.mobileHamburger {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 300;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  transition: background 0.15s;
+}
+
+.mobileHamburger:hover { background: rgba(255, 255, 255, 0.96); }
+
+/* ── Glass header (kept for print/reference; no longer rendered) ─────────── */
 
 .glassHeader {
   flex-shrink: 0;
@@ -302,11 +389,11 @@
   gap: 12px;
   height: var(--header-h);
   padding: 0 20px;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-  box-shadow: 0 1px 16px rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.12);
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.05), inset 0 -1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .hamburgerBtn {
@@ -10996,11 +11083,7 @@
     height: 100vh;
   }
 
-  .hamburgerBtn {
-    display: flex !important;
-  }
-
-  .glassHeaderBrand {
+  .mobileHamburger {
     display: flex !important;
   }
 

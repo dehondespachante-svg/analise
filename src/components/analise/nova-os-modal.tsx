@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { X, Search, Plus, Trash2, CheckCircle, AlertTriangle, Loader } from "lucide-react";
 import {
   buscarVeiculoPorPlacaSgdw, buscarClientesPorNomeSgdw,
-  buscarProximaOsSgdw, criarOsSgdw, buscarServicosSgdw,
+  buscarClienteCompletoPorNumeroSgdw,
+  buscarProximaOsSgdw, buscarOrdTmpSgdw, criarOsSgdw, buscarServicosSgdw,
 } from "@/src/features/sgdw/client";
 import type { SgdwConfig } from "@/src/features/sgdw/types";
 import type { SgdwVeiculoInfo, SgdwClienteSimples, NovaOsItem } from "@/src/features/sgdw/client";
@@ -110,6 +111,10 @@ export function NovaOsModal({
   const todosServicos = useRef<Array<{ SERNUMER: number; DESCRICAO: string }>>([]);
   const servicosCarregados = useRef(false);
 
+  // ── Origem / Resp. Financeiro (display-only — colunas TBOS não confirmadas)
+  const [origem, setOrigem]     = useState("");
+  const [respFin, setRespFin]   = useState("");
+
   // ── Observação ───────────────────────────────────────────
   const [obs, setObs] = useState("");
 
@@ -124,12 +129,16 @@ export function NovaOsModal({
   const [gerando, setGerando] = useState(false);
   const [notif, setNotif] = useState<{ tipo: "ok" | "erro"; msg: string } | null>(null);
 
+  // ORDTMP detectado por SELECT no SGDW (read-only) para evitar status incorreto
+  const [ordtmp, setOrdtmp] = useState<number>(2);
+
   const montado = useRef(true);
   useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
 
-  // ── Carrega próximo número de OS ao abrir ─────────────────
+  // ── Carrega próximo número de OS e detecta ORDTMP ao abrir ──
   useEffect(() => {
     buscarProximaOsSgdw(config).then(n => { if (montado.current) setNumOs(n); }).catch(() => {});
+    buscarOrdTmpSgdw(config).then(v => { if (montado.current) setOrdtmp(v); }).catch(() => {});
   }, [config]);
 
   // ── Carrega catálogo de serviços uma vez ─────────────────
@@ -196,14 +205,61 @@ export function NovaOsModal({
     try {
       const v = await buscarVeiculoPorPlacaSgdw(config, p);
       if (montado.current) {
-        if (v) { setVeiculo(v); setErroVeic(""); }
-        else setErroVeic(`Placa "${p}" não encontrada no sistema.`);
+        if (v) {
+          setVeiculo(v);
+          setErroVeic("");
+          // Auto-fill dados complementares do veículo
+          setMarca(v.MARCA_MODELO);
+          setFabMod(
+            v.ANO_FABRICACAO && v.ANO_MODELO
+              ? `${v.ANO_FABRICACAO}/${v.ANO_MODELO}`
+              : v.ANO_FABRICACAO ? String(v.ANO_FABRICACAO) : ""
+          );
+          setTipo(v.TIPO_NOME);
+          setCategoria(v.CATEGORIA_NOME);
+          setCombustivel(v.COMBUSTIVEL_NOME);
+          setEspecie(v.ESPECIE_NOME);
+          setCor(v.COR_NOME);
+          setCrvNf(v.NR_CRV);
+          if (v.DT_AQUISICAO) setDtCrv(v.DT_AQUISICAO);
+          if (v.VALOR_NF) setValorNf(String(v.VALOR_NF));
+          setVeiZeroKm(v.ZERO_KM);
+          setRestricao(v.RESTRICAO_NOME);
+          // Se tem proprietário e ainda não selecionou cliente, sugerir
+          if (v.PROPRIETARIO_CLINUMER && !clienteSel) {
+            const prop: SgdwClienteSimples = {
+              CLINUMER: v.PROPRIETARIO_CLINUMER,
+              NOME: v.PROPRIETARIO_NOME,
+            };
+            setClienteSel(prop);
+            setClienteInput(v.PROPRIETARIO_NOME);
+            // Carregar dados completos do proprietário
+            buscarClienteCompletoPorNumeroSgdw(config, v.PROPRIETARIO_CLINUMER)
+              .then(det => { if (!det || !montado.current) return; preencherDadosCliente(det); })
+              .catch(() => {});
+          }
+        } else {
+          setErroVeic(`Placa "${p}" não encontrada no sistema.`);
+        }
       }
     } catch (e) {
       if (montado.current) setErroVeic(e instanceof Error ? e.message : "Erro na busca");
     } finally {
       if (montado.current) setBuscandoVeic(false);
     }
+  }
+
+  function preencherDadosCliente(det: { CPF_CNPJ: string; RG: string; LOGRADOURO: string; NUMERO: string; BAIRRO: string; CEP: string; COMPLEMENTO: string; EMAIL: string; MUNICIPIO: string; UF: string }) {
+    if (det.CPF_CNPJ) setCpfCnpj(det.CPF_CNPJ);
+    if (det.RG) setRg(det.RG);
+    if (det.LOGRADOURO) setEndereco(det.LOGRADOURO);
+    if (det.NUMERO) setNumero(det.NUMERO);
+    if (det.BAIRRO) setBairro(det.BAIRRO);
+    if (det.CEP) setCep(det.CEP);
+    if (det.COMPLEMENTO) setComplemento(det.COMPLEMENTO);
+    if (det.EMAIL) setEmail(det.EMAIL);
+    if (det.MUNICIPIO) setMunicipio(det.MUNICIPIO);
+    if (det.UF) setUfMun(det.UF);
   }
 
   // ── Adiciona item à lista ─────────────────────────────────
@@ -244,6 +300,8 @@ export function NovaOsModal({
         acrescimo,
         desconto,
         obs,
+        exercicio: exercicio ? parseInt(exercicio, 10) : undefined,
+        ordtmp,
       });
       setNotif({ tipo: "ok", msg: `OS ${criadas.join(", ")} criada com sucesso!` });
       setTimeout(() => { onCriada(criadas); }, 1500);
@@ -336,6 +394,10 @@ export function NovaOsModal({
                 {veiculo && <span style={{ fontSize: "0.58rem", color: "#1a5c34", marginTop: 1 }}>✓ Veículo #{veiculo.VEINUMER}</span>}
               </Campo>
 
+              <Campo label="Chassi" w="170px">
+                <input value={veiculo?.CHASSI ?? ""} readOnly placeholder="—" style={inputReadonly} />
+              </Campo>
+
               <Campo label="RENAVAM" w="130px">
                 <input value={veiculo?.RENAVAM ?? ""} readOnly placeholder="—" style={inputReadonly} />
               </Campo>
@@ -381,7 +443,14 @@ export function NovaOsModal({
                         maxHeight: 200, overflowY: "auto", minWidth: 280,
                       }}>
                         {clientesBusca.map(c => (
-                          <div key={c.CLINUMER} onMouseDown={() => { setClienteSel(c); setClienteInput(c.NOME); setMostraSugCliente(false); }}
+                          <div key={c.CLINUMER} onMouseDown={() => {
+                            setClienteSel(c);
+                            setClienteInput(c.NOME);
+                            setMostraSugCliente(false);
+                            buscarClienteCompletoPorNumeroSgdw(config, c.CLINUMER)
+                              .then(det => { if (!det || !montado.current) return; preencherDadosCliente(det); })
+                              .catch(() => {});
+                          }}
                             style={{ padding: "6px 10px", cursor: "pointer", borderBottom: "1px solid #e8f0e9", fontSize: "0.72rem" }}
                             onMouseEnter={e => (e.currentTarget.style.background = "#f0faf4")}
                             onMouseLeave={e => (e.currentTarget.style.background = "#fff")}>
@@ -514,8 +583,8 @@ export function NovaOsModal({
                 </Campo>
               </div>
 
-              {/* Linha 8: Restrição */}
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {/* Linha 8: Restrição + Fech. O.S. */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
                 <Campo label="Restrição">
                   <select value={restricao} onChange={e => setRestricao(e.target.value)}
                     style={{ ...inputBase, width: 260, appearance: "none" }}>
@@ -526,6 +595,36 @@ export function NovaOsModal({
                     <option>Penhor</option>
                     <option>Outras</option>
                   </select>
+                </Campo>
+              </div>
+
+              {/* Linha 9: Origem + Resp. Fin. */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <Campo label="Origem">
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input
+                      value={origem} onChange={e => setOrigem(e.target.value)}
+                      placeholder="Origem do pedido..."
+                      style={{ ...inputBase, width: 220 }}
+                    />
+                    <button type="button" title="Buscar origem (visual)"
+                      style={{ ...btnAcao(), padding: "4px 7px", opacity: 0.55, cursor: "not-allowed" }}>
+                      <Search size={11} />
+                    </button>
+                  </div>
+                </Campo>
+                <Campo label="Resp. Fin.">
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <input
+                      value={respFin} onChange={e => setRespFin(e.target.value)}
+                      placeholder="Responsável financeiro..."
+                      style={{ ...inputBase, width: 220 }}
+                    />
+                    <button type="button" title="Buscar responsável (visual)"
+                      style={{ ...btnAcao(), padding: "4px 7px", opacity: 0.55, cursor: "not-allowed" }}>
+                      <Search size={11} />
+                    </button>
+                  </div>
                 </Campo>
               </div>
             </div>

@@ -46,7 +46,7 @@ export type SgdwDados = {
 
 export type SgdwExplorerAba =
   | "os" | "clientes" | "empresas" | "veiculos" | "servicos"
-  | "caixa" | "funcionarios" | "schema";
+  | "caixa" | "funcionarios" | "atpv" | "schema";
 
 export type SgdwPaginaDados = {
   linhas: Record<string, unknown>[];

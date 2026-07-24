@@ -13,34 +13,37 @@ type TabId = 'resumo' | 'frota' | 'historico' | 'pendencias';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-  pageBg: '#0b1e12',           // sidebar/shell fundo escuro
-  contentBg: '#eef8f2',        // área de conteúdo: branco esverdeado claro
-  sidebarBg: '#0d2117',
-  accent: '#1cb870',
-  accentHover: '#17a361',
-  accentMuted: 'rgba(28,184,112,0.15)',
+  pageBg: '#f0f4f8',
+  contentBg: '#f0f4f8',
+  sidebarBg: '#ffffff',
+  accent: '#10b981',
+  accentHover: '#059669',
+  accentMuted: 'rgba(16,185,129,0.1)',
+  accentGlow: '0 0 0 3px rgba(16,185,129,0.15)',
   cardBg: '#ffffff',
-  cardBorder: 'rgba(28,184,112,0.16)',
-  textPrimary: '#0d2117',
-  textSec: '#3d6b4e',
-  textMuted: '#7a9e8a',
-  rowAlt: 'rgba(28,184,112,0.05)',
-  tableBorder: 'rgba(28,184,112,0.12)',
-  tableHeader: '#f2fbf6',
+  cardBorder: 'rgba(0,0,0,0.07)',
+  cardShadow: '0 1px 3px rgba(0,0,0,0.05), 0 6px 24px rgba(0,0,0,0.06)',
+  textPrimary: '#0f172a',
+  textSec: '#334155',
+  textMuted: '#64748b',
+  rowAlt: 'rgba(16,185,129,0.04)',
+  rowHover: 'rgba(16,185,129,0.07)',
+  tableBorder: 'rgba(0,0,0,0.06)',
+  tableHeader: '#f0f4f8',
 };
 
 // ─── Badge ────────────────────────────────────────────────────────────────────
 function Badge({ cor, label }: { cor: string; label: string }) {
-  const m: Record<string, [string, string]> = {
-    green:  ['#dcfce7', '#15803d'],
-    yellow: ['#fef3c7', '#92400e'],
-    red:    ['#fee2e2', '#b91c1c'],
-    gray:   ['#f1f5f9', '#475569'],
-    blue:   ['#dbeafe', '#1d4ed8'],
+  const m: Record<string, [string, string, string]> = {
+    green:  ['rgba(21,128,61,0.09)',  '#15803d', 'rgba(21,128,61,0.22)'],
+    yellow: ['rgba(146,64,14,0.09)',  '#92400e', 'rgba(146,64,14,0.22)'],
+    red:    ['rgba(185,28,28,0.09)',  '#b91c1c', 'rgba(185,28,28,0.22)'],
+    gray:   ['rgba(71,85,105,0.09)',  '#475569', 'rgba(71,85,105,0.22)'],
+    blue:   ['rgba(29,78,216,0.09)',  '#1d4ed8', 'rgba(29,78,216,0.22)'],
   };
-  const [bg, fg] = m[cor] ?? m.gray;
+  const [bg, fg, bd] = m[cor] ?? m.gray;
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 9px', borderRadius: 20, fontSize: '0.68rem', fontWeight: 700, background: bg, color: fg, letterSpacing: '0.02em', border: `1px solid ${fg}29` }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 6, fontSize: '0.67rem', fontWeight: 700, background: bg, color: fg, letterSpacing: '0.03em', border: `1px solid ${bd}`, fontVariantNumeric: 'tabular-nums' }}>
       {label}
     </span>
   );
@@ -49,19 +52,19 @@ function Badge({ cor, label }: { cor: string; label: string }) {
 // ─── Spinner ──────────────────────────────────────────────────────────────────
 function Spinner() {
   return (
-    <div style={{ textAlign: 'center', padding: '48px 0', color: C.textMuted }}>
-      <svg width="36" height="36" viewBox="0 0 40 40" style={{ animation: 'ep-spin 1s linear infinite' }}>
+    <div style={{ textAlign: 'center', padding: '56px 0', color: C.textMuted }}>
+      <svg width="32" height="32" viewBox="0 0 40 40" style={{ animation: 'ep-spin 0.9s linear infinite' }}>
         <style>{`@keyframes ep-spin{to{transform:rotate(360deg)}}`}</style>
-        <circle cx="20" cy="20" r="16" fill="none" stroke={C.accent} strokeWidth="3.5" strokeDasharray="60 20" strokeLinecap="round"/>
+        <circle cx="20" cy="20" r="16" fill="none" stroke={C.accent} strokeWidth="3" strokeDasharray="55 25" strokeLinecap="round"/>
       </svg>
-      <div style={{ marginTop: 12, fontSize: '0.82rem', color: C.textMuted }}>Carregando dados SGDW...</div>
+      <div style={{ marginTop: 14, fontSize: '0.8rem', fontWeight: 500, color: C.textMuted, letterSpacing: '0.01em' }}>Consultando SGDW...</div>
     </div>
   );
 }
 
 // ─── Vazio ────────────────────────────────────────────────────────────────────
 function Vazio({ msg }: { msg: string }) {
-  return <div style={{ padding: '44px 20px', textAlign: 'center', color: C.textMuted, fontSize: '0.88rem' }}>{msg}</div>;
+  return <div style={{ padding: '52px 20px', textAlign: 'center', color: C.textMuted, fontSize: '0.84rem', fontWeight: 500, letterSpacing: '0.01em' }}>{msg}</div>;
 }
 
 // ─── Paginação ────────────────────────────────────────────────────────────────
@@ -95,21 +98,21 @@ function Paginacao({ page, total, size, setPage, setSize, count, totalItems }: {
   });
 
   const btnBase: React.CSSProperties = {
-    minWidth: 32, height: 32, border: '1.5px solid rgba(28,184,112,0.22)',
-    borderRadius: 8, background: '#fff', cursor: 'pointer', fontFamily: 'inherit',
-    fontSize: '0.82rem', fontWeight: 600, color: C.textSec,
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 6px',
-    transition: 'all 0.14s',
+    minWidth: 30, height: 30, border: '1px solid rgba(0,0,0,0.1)',
+    borderRadius: 7, background: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+    fontSize: '0.8rem', fontWeight: 600, color: C.textSec,
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px',
+    transition: 'all 0.13s', boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
   };
-  const btnActive: React.CSSProperties = { ...btnBase, background: C.accent, color: '#fff', border: `1.5px solid ${C.accent}`, boxShadow: `0 2px 8px rgba(28,184,112,0.35)` };
-  const btnDisabled: React.CSSProperties = { ...btnBase, opacity: 0.35, cursor: 'default' };
+  const btnActive: React.CSSProperties = { ...btnBase, background: C.accent, color: '#fff', border: `1px solid ${C.accent}`, boxShadow: `0 2px 8px rgba(28,184,112,0.4)` };
+  const btnDisabled: React.CSSProperties = { ...btnBase, opacity: 0.3, cursor: 'default', boxShadow: 'none' };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, padding: '12px 18px', borderTop: '1px solid rgba(28,184,112,0.1)', background: '#f9fdfb' }}>
-      <span style={{ fontSize: '0.78rem', color: C.textSec }}>
-        Mostrando <strong>{ini}–{fim}</strong> de <strong>{totalItems}</strong> registros
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, padding: '11px 20px', borderTop: `1px solid ${C.tableBorder}`, background: '#fafcfb' }}>
+      <span style={{ fontSize: '0.76rem', fontWeight: 500, color: C.textMuted }}>
+        <strong style={{ color: C.textSec, fontWeight: 600 }}>{ini}–{fim}</strong> de <strong style={{ color: C.textSec, fontWeight: 600 }}>{totalItems}</strong> registros
       </span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <button style={page === 1 ? btnDisabled : btnBase} disabled={page === 1}
           onClick={() => setPage(1)} title="Primeira">«</button>
         <button style={page === 1 ? btnDisabled : btnBase} disabled={page === 1}
@@ -122,7 +125,7 @@ function Paginacao({ page, total, size, setPage, setSize, count, totalItems }: {
         <button style={page === total ? btnDisabled : btnBase} disabled={page === total}
           onClick={() => setPage(total)} title="Última">»</button>
         <select value={size} onChange={e => { setSize(Number(e.target.value)); setPage(1); }}
-          style={{ marginLeft: 8, padding: '5px 8px', border: '1.5px solid rgba(28,184,112,0.22)', borderRadius: 8, fontSize: '0.8rem', color: C.textPrimary, background: '#fff', cursor: 'pointer', outline: 'none', fontFamily: 'inherit' }}>
+          style={{ marginLeft: 8, padding: '4px 8px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 7, fontSize: '0.78rem', color: C.textPrimary, background: '#fff', cursor: 'pointer', outline: 'none', fontFamily: 'inherit', fontWeight: 500, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
           {[10, 25, 50, 100].map(s => <option key={s} value={s}>{s} / pág.</option>)}
         </select>
       </div>
@@ -133,9 +136,9 @@ function Paginacao({ page, total, size, setPage, setSize, count, totalItems }: {
 // ─── Chip de filtro ───────────────────────────────────────────────────────────
 function FiltroChip({ label, onClear }: { label: string; onClear: () => void }) {
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontWeight: 700, color: C.accent, background: C.accentMuted, border: `1px solid rgba(28,184,112,0.3)`, padding: '3px 10px', borderRadius: 20 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.68rem', fontWeight: 700, color: C.accent, background: C.accentMuted, border: `1px solid rgba(28,184,112,0.22)`, padding: '2px 8px 2px 10px', borderRadius: 7 }}>
       {label}
-      <button onClick={onClear} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.accent, padding: 0, lineHeight: 1, fontSize: '0.85rem', display: 'flex', alignItems: 'center' }}>✕</button>
+      <button onClick={onClear} style={{ background: 'rgba(28,184,112,0.12)', border: 'none', cursor: 'pointer', color: C.accent, padding: '1px 4px', lineHeight: 1, fontSize: '0.78rem', display: 'flex', alignItems: 'center', borderRadius: 4, fontWeight: 800 }}>✕</button>
     </span>
   );
 }
@@ -147,48 +150,50 @@ function KpiCard({ label, value, sub, color, icon, onClick, active }: {
 }) {
   return (
     <div onClick={onClick} style={{
-      background: active ? `${color}22` : C.cardBg,
-      border: `1.5px solid ${active ? color : C.cardBorder}`,
-      borderRadius: 16, padding: '16px 18px',
+      background: active ? `${color}12` : C.cardBg,
+      border: `1px solid ${active ? color + '50' : C.cardBorder}`,
+      borderRadius: 14, padding: '15px 16px',
       cursor: onClick ? 'pointer' : 'default',
-      transition: 'all 0.18s',
-      boxShadow: active ? `0 4px 20px ${color}33` : 'none',
-      backdropFilter: 'blur(20px)',
-      minWidth: 0,
+      transition: 'all 0.2s cubic-bezier(0.4,0,0.2,1)',
+      boxShadow: active ? `0 4px 24px ${color}25, 0 1px 4px rgba(0,0,0,0.05)` : C.cardShadow,
+      minWidth: 0, position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-        <span style={{ fontSize: '0.66rem', fontWeight: 700, color: active ? color : C.textSec, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</span>
-        <span style={{ fontSize: '1.25rem', lineHeight: 1 }}>{icon}</span>
+      {/* Accent top bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: active ? color : 'transparent', borderRadius: '14px 14px 0 0', transition: 'background 0.2s' }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <span style={{ fontSize: '0.65rem', fontWeight: 700, color: active ? color : C.textMuted, textTransform: 'uppercase', letterSpacing: '0.09em' }}>{label}</span>
+        <span style={{ fontSize: '1.1rem', lineHeight: 1, opacity: active ? 1 : 0.7 }}>{icon}</span>
       </div>
-      <div style={{ fontSize: '1.45rem', fontWeight: 800, color: active ? color : C.textPrimary, lineHeight: 1.1 }}>{value}</div>
-      {sub && <div style={{ fontSize: '0.68rem', color: active ? `${color}99` : C.textMuted, marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: '1.55rem', fontWeight: 800, color: active ? color : C.textPrimary, lineHeight: 1, letterSpacing: '-0.02em', fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      {sub && <div style={{ fontSize: '0.67rem', fontWeight: 500, color: active ? `${color}bb` : C.textMuted, marginTop: 5 }}>{sub}</div>}
     </div>
   );
 }
 
 // ─── Table primitives ─────────────────────────────────────────────────────────
 const thSt: React.CSSProperties = {
-  padding: '10px 14px', textAlign: 'left', fontWeight: 700,
-  color: '#4d7a5e', fontSize: '0.68rem', textTransform: 'uppercase',
-  letterSpacing: '0.07em', whiteSpace: 'nowrap',
-  background: '#f2fbf6', borderBottom: '1.5px solid rgba(28,184,112,0.18)',
+  padding: '11px 16px', textAlign: 'left', fontWeight: 700,
+  color: '#3d6b4e', fontSize: '0.65rem', textTransform: 'uppercase',
+  letterSpacing: '0.09em', whiteSpace: 'nowrap',
+  background: C.tableHeader, borderBottom: `1.5px solid ${C.tableBorder}`,
 };
 const tdSt: React.CSSProperties = {
-  padding: '10px 14px', color: '#0d2117', fontSize: '0.875rem',
-  borderBottom: '1px solid rgba(28,184,112,0.09)', verticalAlign: 'middle',
+  padding: '11px 16px', color: C.textPrimary, fontSize: '0.875rem',
+  borderBottom: `1px solid ${C.tableBorder}`, verticalAlign: 'middle',
+  fontVariantNumeric: 'tabular-nums',
 };
 
 // ─── Card shell ───────────────────────────────────────────────────────────────
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}`, borderRadius: 16, overflow: 'hidden', backdropFilter: 'blur(20px)' }}>
+    <div style={{ background: C.cardBg, border: `1px solid ${C.cardBorder}`, borderRadius: 14, overflow: 'hidden', boxShadow: C.cardShadow }}>
       {children}
     </div>
   );
 }
 function CardHeader({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ padding: '14px 18px', borderBottom: `1px solid ${C.tableBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+    <div style={{ padding: '14px 20px', borderBottom: `1px solid ${C.tableBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', background: '#fafcfb' }}>
       {children}
     </div>
   );
@@ -202,10 +207,10 @@ function osStatus(r: OsRow): 'pago' | 'parcial' | 'pendente' {
   return 'pendente';
 }
 const selSt: React.CSSProperties = {
-  padding: '8px 12px', background: '#fff',
-  border: '1.5px solid rgba(28,184,112,0.25)', borderRadius: 10,
-  color: '#0d2117', fontSize: '0.875rem', cursor: 'pointer', outline: 'none',
-  fontFamily: 'inherit', fontWeight: 500,
+  padding: '7px 11px', background: '#fff',
+  border: `1px solid ${C.cardBorder}`, borderRadius: 9,
+  color: C.textPrimary, fontSize: '0.84rem', cursor: 'pointer', outline: 'none',
+  fontFamily: 'inherit', fontWeight: 500, boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -222,11 +227,11 @@ function OsModal({ os, onClose }: { os: OsRow; onClose: () => void }) {
   const pct = os.HONORARIOS > 0 ? Math.min((os.RECEBIDO / os.HONORARIOS) * 100, 100) : 0;
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(5px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 560, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 80px rgba(0,0,0,0.42)', border: '1.5px solid rgba(28,184,112,0.25)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(7,16,10,0.72)', backdropFilter: 'blur(12px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 560, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 96px rgba(0,0,0,0.5), 0 0 0 1px rgba(28,184,112,0.15)' }}>
         {/* Header */}
-        <div style={{ padding: '18px 24px', background: C.tableHeader, borderBottom: '1px solid rgba(28,184,112,0.15)', display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: C.accentMuted, border: '1.5px solid rgba(28,184,112,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '18px 24px', background: C.tableHeader, borderBottom: `1px solid ${C.tableBorder}`, display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 42, height: 42, borderRadius: 11, background: C.accentMuted, border: '1px solid rgba(28,184,112,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
             </svg>
@@ -392,7 +397,7 @@ function TabResumo({ clinumer, ano, mes, onAno, onMes }: { clinumer: number; ano
                   const hov = hoveredRow === r.ORDNUMER;
                   return (
                     <tr key={r.ORDNUMER}
-                      style={{ background: hov ? 'rgba(28,184,112,0.09)' : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
+                      style={{ background: hov ? C.rowHover : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
                       onClick={() => setSelectedOs(r)}
                       onMouseEnter={() => setHoveredRow(r.ORDNUMER)}
                       onMouseLeave={() => setHoveredRow(null)}
@@ -478,15 +483,15 @@ function VeiculoModal({ veiculo, clinumer, onClose }: { veiculo: FrotaRow; clinu
   return (
     <div
       onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(7,16,10,0.72)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 800, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 80px rgba(0,0,0,0.42)', border: `1.5px solid rgba(28,184,112,0.25)` }}
+        style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 800, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 96px rgba(0,0,0,0.5), 0 0 0 1px rgba(28,184,112,0.15)' }}
       >
         {/* Header */}
-        <div style={{ padding: '18px 24px', background: C.tableHeader, borderBottom: `1px solid rgba(28,184,112,0.15)`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: C.accentMuted, border: `1.5px solid rgba(28,184,112,0.3)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ padding: '18px 24px', background: C.tableHeader, borderBottom: `1px solid ${C.tableBorder}`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 11, background: C.accentMuted, border: '1px solid rgba(28,184,112,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
             </svg>
@@ -717,11 +722,11 @@ function MesModal({ mes, clinumer, onClose }: { mes: HistoricoMes; clinumer: num
 
   return (
     <>
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(5px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-        <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 820, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 80px rgba(0,0,0,0.42)', border: '1.5px solid rgba(28,184,112,0.25)' }}>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(7,16,10,0.72)', backdropFilter: 'blur(12px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 20, width: '100%', maxWidth: 820, maxHeight: '92vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 32px 96px rgba(0,0,0,0.5), 0 0 0 1px rgba(28,184,112,0.15)' }}>
           {/* Header */}
-          <div style={{ padding: '18px 24px', background: C.tableHeader, borderBottom: '1px solid rgba(28,184,112,0.15)', display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: C.accentMuted, border: '1.5px solid rgba(28,184,112,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ padding: '18px 24px', background: C.tableHeader, borderBottom: `1px solid ${C.tableBorder}`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+            <div style={{ width: 42, height: 42, borderRadius: 11, background: C.accentMuted, border: '1px solid rgba(28,184,112,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
               </svg>
@@ -755,7 +760,7 @@ function MesModal({ mes, clinumer, onClose }: { mes: HistoricoMes; clinumer: num
                         const hov = hoveredRow === r.ORDNUMER;
                         return (
                           <tr key={r.ORDNUMER}
-                            style={{ background: hov ? 'rgba(28,184,112,0.09)' : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
+                            style={{ background: hov ? C.rowHover : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
                             onClick={() => setSelectedOs(r)}
                             onMouseEnter={() => setHoveredRow(r.ORDNUMER)}
                             onMouseLeave={() => setHoveredRow(null)}
@@ -865,7 +870,7 @@ function TabHistorico({ clinumer }: { clinumer: number }) {
                   const hov = hoveredRow === rowKey;
                   return (
                     <tr key={rowKey}
-                      style={{ background: hov ? 'rgba(28,184,112,0.09)' : atual ? 'rgba(28,184,112,0.07)' : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
+                      style={{ background: hov ? C.rowHover : atual ? 'rgba(28,184,112,0.055)' : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
                       onClick={() => setSelectedMes(r)}
                       onMouseEnter={() => setHoveredRow(rowKey)}
                       onMouseLeave={() => setHoveredRow(null)}
@@ -981,7 +986,7 @@ function TabPendencias({ clinumer }: { clinumer: number }) {
                   const hov = hoveredRow === r.ORDNUMER;
                   return (
                     <tr key={r.ORDNUMER}
-                      style={{ background: hov ? 'rgba(28,184,112,0.09)' : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
+                      style={{ background: hov ? C.rowHover : i % 2 ? C.rowAlt : 'transparent', cursor: 'pointer', transition: 'background 0.12s' }}
                       onClick={() => setSelectedOs(r)}
                       onMouseEnter={() => setHoveredRow(r.ORDNUMER)}
                       onMouseLeave={() => setHoveredRow(null)}
@@ -1057,7 +1062,7 @@ export default function EmpresaDashboard() {
   }, [router]);
 
   if (!empresa) return (
-    <div style={{ minHeight: '100vh', background: C.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: C.pageBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Inter',system-ui,sans-serif" }}>
       <Spinner />
     </div>
   );
@@ -1065,81 +1070,87 @@ export default function EmpresaDashboard() {
   const initials = empresa.nome.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: C.pageBg, backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 0%,rgba(28,184,112,0.14) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(13,90,50,0.18) 0%,transparent 60%)', fontFamily: 'system-ui,sans-serif', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: C.pageBg, fontFamily: "'Inter',system-ui,sans-serif", overflow: 'hidden' }}>
 
       {/* Overlay mobile */}
       {sidebarOpen && <div onClick={() => setSidebarOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 150 }} />}
 
       {/* ─── Sidebar ──────────────────────────────────────────────── */}
       <aside style={{
-        position: 'fixed', top: 0, left: 0, height: '100vh', width: 240, zIndex: 200,
+        position: 'fixed', top: 0, left: 0, height: '100vh', width: 248, zIndex: 200,
         background: C.sidebarBg,
-        backgroundImage: 'linear-gradient(180deg,rgba(28,184,112,0.09) 0%,transparent 40%)',
-        borderRight: '1px solid rgba(255,255,255,0.07)',
+        borderRight: '1px solid rgba(15,23,42,0.08)',
+        boxShadow: '2px 0 16px rgba(0,0,0,0.05)',
         display: 'flex', flexDirection: 'column',
         transform: sidebarOpen ? 'translateX(0)' : undefined,
         transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
       }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');`}</style>
+
         {/* Brand */}
-        <div style={{ padding: '22px 18px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: 'rgba(28,184,112,0.2)', border: '1.5px solid rgba(28,184,112,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1cb870" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <div style={{ padding: '24px 18px 18px', borderBottom: '1px solid rgba(15,23,42,0.07)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 20 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M1 3h15v13H1z"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
               </svg>
             </div>
             <div>
-              <div style={{ fontSize: '0.62rem', fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.12em' }}>Dehon</div>
-              <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'rgba(255,255,255,0.9)', lineHeight: 1.1 }}>Portal Empresa</div>
+              <div style={{ fontSize: '0.58rem', fontWeight: 700, color: C.accent, textTransform: 'uppercase', letterSpacing: '0.16em', marginBottom: 1 }}>Dehon Despachante</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: C.textPrimary, lineHeight: 1, letterSpacing: '-0.01em' }}>Portal Empresa</div>
             </div>
           </div>
 
           {/* Empresa badge */}
-          <div style={{ background: 'rgba(28,184,112,0.1)', border: '1px solid rgba(28,184,112,0.25)', borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.8rem', color: '#0b1e12', flexShrink: 0 }}>
+          <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: 9, background: 'linear-gradient(135deg,#10b981 0%,#059669 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.78rem', color: '#fff', flexShrink: 0, letterSpacing: '0.02em', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}>
               {initials}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'rgba(255,255,255,0.9)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{empresa.nome}</div>
-              <div style={{ fontSize: '0.66rem', color: C.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{empresa.codigo}</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: C.textPrimary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.01em' }}>{empresa.nome}</div>
+              <div style={{ fontSize: '0.63rem', color: C.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500, fontFamily: 'monospace', letterSpacing: '0.05em' }}>{empresa.codigo}</div>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: '12px 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <nav style={{ flex: 1, padding: '14px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {NAV_ITEMS.map(item => {
             const active = tab === item.id;
             return (
               <button key={item.id} onClick={() => { setTab(item.id); setSidebarOpen(false); }} style={{
-                display: 'flex', alignItems: 'center', gap: 12,
-                width: '100%', padding: '10px 14px', border: 'none',
-                borderRadius: 11, background: active ? C.accentMuted : 'transparent',
-                color: active ? C.accent : 'rgba(255,255,255,0.5)',
-                fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: active ? 700 : 500,
-                cursor: 'pointer', textAlign: 'left', transition: 'all 0.18s',
+                display: 'flex', alignItems: 'center', gap: 11,
+                width: '100%', padding: '10px 13px', border: 'none',
+                borderRadius: 10,
+                background: active ? 'rgba(16,185,129,0.1)' : 'transparent',
+                color: active ? C.accent : C.textSec,
+                fontFamily: "'Inter',system-ui,sans-serif", fontSize: '0.855rem', fontWeight: active ? 700 : 500,
+                cursor: 'pointer', textAlign: 'left', transition: 'all 0.16s',
+                borderLeft: `2.5px solid ${active ? C.accent : 'transparent'}`,
+                letterSpacing: active ? '-0.005em' : '0',
               }}
-                onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'; }}
-                onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
-                <span style={{ flexShrink: 0, opacity: active ? 1 : 0.6 }}>{item.icon}</span>
+                onMouseEnter={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(15,23,42,0.05)'; (e.currentTarget as HTMLButtonElement).style.color = C.textPrimary; } }}
+                onMouseLeave={e => { if (!active) { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = C.textSec; } }}>
+                <span style={{ flexShrink: 0, opacity: active ? 1 : 0.6, transition: 'opacity 0.16s' }}>{item.icon}</span>
                 {item.label}
+                {active && <span style={{ marginLeft: 'auto', width: 6, height: 6, borderRadius: '50%', background: C.accent, flexShrink: 0 }} />}
               </button>
             );
           })}
         </nav>
 
         {/* Footer */}
-        <div style={{ padding: '14px 10px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ padding: '12px 10px', borderTop: '1px solid rgba(15,23,42,0.07)' }}>
           <button onClick={logout} style={{
             display: 'flex', alignItems: 'center', gap: 10,
-            width: '100%', padding: '10px 14px', border: 'none',
-            borderRadius: 11, background: 'transparent', cursor: 'pointer',
-            color: 'rgba(255,255,255,0.38)', fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 600,
-            textAlign: 'left', transition: 'all 0.18s',
+            width: '100%', padding: '9px 13px', border: 'none',
+            borderRadius: 10, background: 'transparent', cursor: 'pointer',
+            color: C.textMuted, fontFamily: "'Inter',system-ui,sans-serif", fontSize: '0.84rem', fontWeight: 500,
+            textAlign: 'left', transition: 'all 0.16s',
           }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.1)'; (e.currentTarget as HTMLButtonElement).style.color = '#f87171'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.38)'; }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.07)'; (e.currentTarget as HTMLButtonElement).style.color = '#dc2626'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; (e.currentTarget as HTMLButtonElement).style.color = C.textMuted; }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
             Sair do portal
@@ -1148,44 +1159,51 @@ export default function EmpresaDashboard() {
       </aside>
 
       {/* ─── Main ─────────────────────────────────────────────────── */}
-      <main style={{ flex: 1, marginLeft: 240, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, background: C.contentBg }}>
+      <main style={{ flex: 1, marginLeft: 248, display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0, background: C.contentBg }}>
         {/* Topbar */}
         <header style={{
-          height: 60, flexShrink: 0,
-          background: '#fff',
-          borderBottom: '1.5px solid rgba(28,184,112,0.18)',
-          boxShadow: '0 1px 6px rgba(28,184,112,0.08)',
+          height: 58, flexShrink: 0,
+          background: 'rgba(255,255,255,0.96)',
+          borderBottom: `1px solid ${C.cardBorder}`,
+          boxShadow: '0 1px 0 rgba(0,0,0,0.05), 0 2px 12px rgba(0,0,0,0.04)',
           display: 'flex', alignItems: 'center', padding: '0 28px', gap: 14,
+          backdropFilter: 'blur(16px)',
         }}>
           {/* Mobile menu */}
           <button onClick={() => setSidebarOpen(s => !s)} style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: C.textSec, padding: 4 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
 
           {/* Breadcrumb */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-            <span style={{ fontSize: '0.78rem', color: '#7a9e8a' }}>Portal</span>
-            <span style={{ color: '#7a9e8a', fontSize: '0.78rem' }}>›</span>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0d2117' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 1 }}>
+            <span style={{ fontSize: '0.77rem', fontWeight: 500, color: C.textMuted, letterSpacing: '0.01em' }}>Portal</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2" strokeLinecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span style={{ fontSize: '0.855rem', fontWeight: 700, color: C.textPrimary, letterSpacing: '-0.01em' }}>
               {NAV_ITEMS.find(n => n.id === tab)?.label}
             </span>
           </div>
 
+          {/* Company chip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: C.accentMuted, border: '1px solid rgba(28,184,112,0.2)', borderRadius: 8, padding: '4px 10px 4px 6px' }}>
+            <div style={{ width: 20, height: 20, borderRadius: 5, background: C.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '0.62rem', color: '#fff', flexShrink: 0 }}>{initials}</div>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: C.textSec }}>{empresa.nome}</span>
+          </div>
+
           {/* SGDW status */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(28,184,112,0.1)', border: '1px solid rgba(28,184,112,0.25)', borderRadius: 20, padding: '5px 12px' }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: C.accent, boxShadow: `0 0 6px ${C.accent}` }} />
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#0f6640' }}>SGDW Online</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(28,184,112,0.08)', border: '1px solid rgba(28,184,112,0.18)', borderRadius: 8, padding: '4px 10px' }}>
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.accent, boxShadow: `0 0 5px ${C.accent}` }} />
+            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: C.textSec, letterSpacing: '0.02em' }}>SGDW</span>
           </div>
         </header>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 40px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(28,184,112,0.2) transparent' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '26px 28px 48px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(28,184,112,0.15) transparent' }}>
           {/* Page title */}
-          <div style={{ marginBottom: 24 }}>
-            <h2 style={{ margin: 0, fontSize: '1.35rem', fontWeight: 800, color: C.textPrimary, letterSpacing: '-0.02em' }}>
+          <div style={{ marginBottom: 22 }}>
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800, color: C.textPrimary, letterSpacing: '-0.025em', lineHeight: 1 }}>
               {NAV_ITEMS.find(n => n.id === tab)?.label}
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: C.textMuted }}>
+            <p style={{ margin: '5px 0 0', fontSize: '0.8rem', fontWeight: 500, color: C.textMuted }}>
               {empresa.sgdwNome} · SGDW #{empresa.clinumer}
             </p>
           </div>

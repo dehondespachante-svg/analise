@@ -1,5 +1,5 @@
-import AnaliseHonorarios from "@/src/components/analise/honorario-analise";
+import HomeLogin from "@/src/components/home/HomeLogin";
 
 export default function Home() {
-  return <AnaliseHonorarios />;
+  return <HomeLogin />;
 }

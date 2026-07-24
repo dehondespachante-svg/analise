@@ -53,8 +53,10 @@ function rangeFromPreset(p: Preset): { ai: number; mi: number; af: number; mf: n
 
 export default function SgdwConexao({
   onRelatorio,
+  ocultarExplorador = false,
 }: {
   onRelatorio: (r: RelatorioHonorarios | null) => void;
+  ocultarExplorador?: boolean;
 }) {
   const [status, setStatus]         = useState<Status>("conectando");
   const [erro, setErro]             = useState<string | null>(null);
@@ -482,7 +484,7 @@ export default function SgdwConexao({
         </div>
       </article>
 
-      <SgdwExplorer config={RELAY_CONFIG} />
+      {!ocultarExplorador && <SgdwExplorer config={RELAY_CONFIG} />}
     </>
   );
 }

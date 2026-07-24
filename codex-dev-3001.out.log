@@ -1,0 +1,10 @@
+
+> honorarios-app@0.1.0 dev:3001
+> next dev --webpack -p 3001 -H 127.0.0.1
+
+▲ Next.js 16.2.6 (webpack)
+- Local:         http://127.0.0.1:3001
+- Network:       http://127.0.0.1:3001
+- Environments: .env.local
+✓ Ready in 682ms
+[?25h

@@ -46,41 +46,40 @@ export default function EmpresaLogin() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0b1e12',
-      backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 0%,rgba(28,184,112,0.22) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(13,90,50,0.28) 0%,transparent 60%)',
+      background: '#f0f4f8',
+      backgroundImage: 'radial-gradient(ellipse 80% 60% at 20% 0%,rgba(22,163,74,0.07) 0%,transparent 60%)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 24, fontFamily: 'system-ui,sans-serif',
     }}>
       {/* Card */}
       <div style={{
-        background: 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.12)',
-        backdropFilter: 'blur(32px)',
+        background: '#fff',
+        border: '1px solid rgba(16,185,129,0.25)',
         borderRadius: 24, padding: '52px 44px',
         width: '100%', maxWidth: 420,
-        boxShadow: '0 32px 80px rgba(0,0,0,0.55)',
+        boxShadow: '0 8px 40px rgba(22,163,74,0.1)',
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div style={{
             width: 64, height: 64, borderRadius: 18,
-            background: 'rgba(28,184,112,0.18)',
-            border: '1.5px solid rgba(28,184,112,0.4)',
+            background: 'rgba(22,163,74,0.1)',
+            border: '1.5px solid rgba(22,163,74,0.3)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 20, boxShadow: '0 8px 24px rgba(28,184,112,0.25)',
+            marginBottom: 20, boxShadow: '0 4px 16px rgba(22,163,74,0.12)',
           }}>
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1cb870" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11l5 5v5a2 2 0 0 1-2 2z"/>
               <circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
             </svg>
           </div>
-          <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em', color: '#1cb870', textTransform: 'uppercase', marginBottom: 6 }}>
+          <div style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.18em', color: '#10b981', textTransform: 'uppercase', marginBottom: 6 }}>
             Dehon Despachante
           </div>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: 'rgba(255,255,255,0.95)', letterSpacing: '-0.02em' }}>
+          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#111', letterSpacing: '-0.02em' }}>
             Portal da Empresa
           </h1>
-          <p style={{ margin: '8px 0 0', color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem' }}>
+          <p style={{ margin: '8px 0 0', color: '#6b7280', fontSize: '0.9rem' }}>
             Acesse com seu código único de cliente
           </p>
         </div>
@@ -88,9 +87,9 @@ export default function EmpresaLogin() {
         {/* Erro */}
         {erro && (
           <div style={{
-            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.35)',
+            background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.25)',
             borderRadius: 12, padding: '12px 16px', marginBottom: 24,
-            color: '#fca5a5', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8,
+            color: '#dc2626', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8,
           }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             {erro}
@@ -98,7 +97,7 @@ export default function EmpresaLogin() {
         )}
 
         <form onSubmit={handleLogin}>
-          <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: 'rgba(255,255,255,0.5)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <label style={{ display: 'block', fontSize: '0.7rem', fontWeight: 700, color: '#059669', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
             Código de Acesso
           </label>
           <input
@@ -109,27 +108,27 @@ export default function EmpresaLogin() {
             autoFocus
             style={{
               width: '100%', padding: '14px 18px',
-              background: 'rgba(255,255,255,0.07)',
-              border: '1.5px solid rgba(255,255,255,0.14)',
+              background: '#f9fafb',
+              border: '1.5px solid rgba(16,185,129,0.25)',
               borderRadius: 12, fontSize: '1.2rem',
               fontFamily: 'monospace', letterSpacing: '0.14em',
               boxSizing: 'border-box', outline: 'none',
-              color: '#fff', marginBottom: 20,
+              color: '#111', marginBottom: 20,
               transition: 'border-color 0.18s, box-shadow 0.18s',
             }}
-            onFocus={e => { e.target.style.borderColor = '#1cb870'; e.target.style.boxShadow = '0 0 0 3px rgba(28,184,112,0.18)'; }}
-            onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.14)'; e.target.style.boxShadow = 'none'; }}
+            onFocus={e => { e.target.style.borderColor = '#10b981'; e.target.style.boxShadow = '0 0 0 3px rgba(22,163,74,0.12)'; }}
+            onBlur={e => { e.target.style.borderColor = 'rgba(16,185,129,0.25)'; e.target.style.boxShadow = 'none'; }}
           />
           <button
             type="submit"
             disabled={loading}
             style={{
               width: '100%', padding: '15px',
-              background: loading ? 'rgba(28,184,112,0.4)' : '#1cb870',
+              background: loading ? 'rgba(22,163,74,0.5)' : '#10b981',
               color: '#fff', border: 'none', borderRadius: 12,
               fontSize: '0.95rem', fontWeight: 700, cursor: loading ? 'default' : 'pointer',
               letterSpacing: '0.04em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              boxShadow: loading ? 'none' : '0 4px 16px rgba(28,184,112,0.4)',
+              boxShadow: loading ? 'none' : '0 4px 16px rgba(22,163,74,0.3)',
               transition: 'all 0.18s',
             }}
           >
@@ -145,9 +144,9 @@ export default function EmpresaLogin() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 32, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '0.83rem' }}>Primeiro acesso? </span>
-          <a href="/empresa/cadastro" style={{ color: '#1cb870', textDecoration: 'none', fontSize: '0.83rem', fontWeight: 700 }}>
+        <div style={{ textAlign: 'center', marginTop: 32, paddingTop: 24, borderTop: '1px solid #e5e7eb' }}>
+          <span style={{ color: '#6b7280', fontSize: '0.83rem' }}>Primeiro acesso? </span>
+          <a href="/empresa/cadastro" style={{ color: '#10b981', textDecoration: 'none', fontSize: '0.83rem', fontWeight: 700 }}>
             Cadastrar empresa →
           </a>
         </div>

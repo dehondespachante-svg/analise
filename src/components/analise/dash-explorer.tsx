@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, Search, X, AlertTriangle, CheckCircle, Download, Eye } from "lucide-react";
 import * as XLSX from "xlsx";
 import {
-  buscarAtpvSgdw, buscarCaixaSgdw, buscarClientesSgdw, buscarDadosTabelaSgdw, buscarEmpresasSgdw,
+  buscarCaixaSgdw, buscarClientesSgdw, buscarDadosTabelaSgdw, buscarEmpresasSgdw,
   buscarEsquemaTiposSgdw, buscarFuncionariosSgdw, buscarKpiCaixaSgdw, buscarKpiOsSgdw,
   buscarMunicipiosSgdw, buscarOsSgdw, buscarOsVeiculoSgdw, buscarServicosSgdw,
   buscarTodasEmpresasSgdw, buscarVeiculosEmpresaSgdw, buscarVeiculosSgdw,
@@ -74,7 +74,7 @@ const COLS: Record<Exclude<SgdwExplorerAba, "schema" | "empresas" | "veiculos" |
     { key: "SALDO",     label: "A Receber",  format: "saldo", align: "right", w: 105 },
   ],
   servicos: [
-    { key: "SOSNUMER",  label: "Cod",         w: 58 },
+    { key: "SERNUMER",  label: "Cod",         w: 58 },
     { key: "DESCRICAO", label: "Descricao" },
     { key: "QTD_OS",    label: "OS",          align: "right", w: 60 },
     { key: "TOTAL_HON", label: "Honorarios", format: "moeda", align: "right", w: 110 },
@@ -104,7 +104,6 @@ const ABAS: Array<{ id: SgdwExplorerAba; label: string; emoji: string }> = [
   { id: "servicos",     label: "Servicos",            emoji: "⚙️" },
   { id: "caixa",        label: "Caixa / Financeiro",  emoji: "💰" },
   { id: "funcionarios", label: "Funcionarios",        emoji: "👥" },
-  { id: "atpv",         label: "ATPV",                emoji: "📄" },
   { id: "schema",       label: "Banco / Tabelas",     emoji: "🗄️" },
 ];
 
@@ -1527,192 +1526,6 @@ function VeiculoModal({ config, veiculo, onClose }: {
 
 // ─── Veículos Tab ─────────────────────────────────────────────────────────────
 
-// ─── ATPV Tab ─────────────────────────────────────────────────────────────────
-
-const moedaAtpv = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-
-function AtpvDetalheModal({ row, onClose }: { row: Record<string, unknown>; onClose: () => void }) {
-  const campo = (label: string, val: unknown) => (
-    <div style={{ marginBottom: 6 }}>
-      <div style={{ fontSize: "0.58rem", fontWeight: 700, textTransform: "uppercase", color: "#7a9a84", letterSpacing: "0.06em" }}>{label}</div>
-      <div style={{ fontSize: "0.8rem", color: "#1a1a1a", wordBreak: "break-word" }}>{val != null && val !== "" ? String(val) : "—"}</div>
-    </div>
-  );
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: "#fff", borderRadius: 14, boxShadow: "0 20px 60px rgba(0,0,0,0.3)", width: "100%", maxWidth: 700, maxHeight: "90vh", overflowY: "auto", padding: "24px 28px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-          <div>
-            <div style={{ fontSize: "1rem", fontWeight: 800, color: "#1a1a1a" }}>ATPV #{String(row.ID ?? "")}</div>
-            <div style={{ fontSize: "0.72rem", color: "#888" }}>Veículo {String(row.VEINUMER ?? "—")} · Venda {fmtData(row.DATAVENDA)}</div>
-          </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "#888", padding: 4 }}><X size={20} /></button>
-        </div>
-
-        {/* Dados da transação */}
-        <div style={{ background: "#f4f9f5", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
-          <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#7a9a84", letterSpacing: "0.07em", marginBottom: 10 }}>Dados da Transação</div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px 16px" }}>
-            {campo("CRV Nro", row.CRV_NRO)}
-            {campo("Data Venda", fmtData(row.DATAVENDA))}
-            {campo("Hora", row.HORA != null && String(row.HORA).trim() ? String(row.HORA) : "—")}
-            {campo("Valor Venda", row.VLRVENDA != null ? moedaAtpv.format(Number(row.VLRVENDA)) : "—")}
-            {campo("Odômetro KM", row.ODOMETRO_KM != null ? `${Number(row.ODOMETRO_KM).toLocaleString("pt-BR")} km` : "—")}
-            {campo("Odômetro D/H", row.ODOMETRO_DH)}
-            {campo("Impedir Lic.", row.FLAIMPEDIRLIC == null ? "—" : Number(row.FLAIMPEDIRLIC) === 1 ? "Sim" : "Não")}
-            {campo("Obrigar Trans.", row.FLAOBRIGARTRA == null ? "—" : Number(row.FLAOBRIGARTRA) === 1 ? "Sim" : "Não")}
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          {/* Vendedor */}
-          <div style={{ background: "#fff8ed", border: "1px solid #fde68a", borderRadius: 10, padding: "12px 16px" }}>
-            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#b45309", letterSpacing: "0.07em", marginBottom: 10 }}>Vendedor</div>
-            {campo("Nome", row.VEND_NOME)}
-            {campo("CPF / CNPJ", row.VEND_CPFCG)}
-            {campo("Endereço", row.VEND_ENDER)}
-            {campo("Complemento", row.VEND_COMPL)}
-            {campo("Município", row.VEND_MUNIC)}
-            {campo("E-mail", row.VEND_EMAIL)}
-          </div>
-          {/* Comprador */}
-          <div style={{ background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 10, padding: "12px 16px" }}>
-            <div style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", color: "#16a34a", letterSpacing: "0.07em", marginBottom: 10 }}>Comprador</div>
-            {campo("Nome", row.COMP_NOME)}
-            {campo("CPF / CNPJ", row.COMP_CPFCG)}
-            {campo("Endereço", row.COMP_ENDER)}
-            {campo("Complemento", row.COMP_COMPL)}
-            {campo("Município", row.COMP_MUNIC)}
-            {campo("E-mail", row.COMP_EMAIL)}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AtpvTab({ config }: { config: SgdwConfig }) {
-  const [busca, setBusca]           = useState("");
-  const [buscaInput, setBuscaInput] = useState("");
-  const [pagina, setPagina]         = useState(0);
-  const [dados, setDados]           = useState<SgdwPaginaDados | null>(null);
-  const [carregando, setCarregando] = useState(false);
-  const [erro, setErro]             = useState<string | null>(null);
-  const [modal, setModal]           = useState<Record<string, unknown> | null>(null);
-  const montado = useRef(true);
-  useEffect(() => { montado.current = true; return () => { montado.current = false; }; }, []);
-
-  const carregar = useCallback(async () => {
-    setCarregando(true); setErro(null);
-    try {
-      const r = await buscarAtpvSgdw(config, pagina, busca);
-      if (montado.current) setDados(r);
-    } catch (e) {
-      if (montado.current) setErro(e instanceof Error ? e.message : "Erro");
-    } finally {
-      if (montado.current) setCarregando(false);
-    }
-  }, [config, pagina, busca]);
-
-  useEffect(() => { carregar(); }, [carregar]);
-
-  const total    = dados?.total ?? 0;
-  const totalPag = Math.ceil(total / SGDW_POR_PAGINA);
-
-  return (
-    <div>
-      {modal && <AtpvDetalheModal row={modal} onClose={() => setModal(null)} />}
-
-      {/* Toolbar */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center", flexWrap: "wrap" }}>
-        <form onSubmit={e => { e.preventDefault(); setPagina(0); setBusca(buscaInput); }} style={{ display: "flex", gap: 6, flex: 1, minWidth: 200 }}>
-          <input value={buscaInput} onChange={e => setBuscaInput(e.target.value)}
-            placeholder="Buscar por vendedor, comprador ou CRV..."
-            style={{ flex: 1, padding: "5px 10px", borderRadius: 7, border: "1px solid #d0ddd6", fontSize: "0.75rem" }} />
-          <button type="submit" style={{ padding: "5px 11px", borderRadius: 7, background: "var(--accent)", color: "#fff", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem" }}>
-            <Search size={12} /> Buscar
-          </button>
-          {busca && <button type="button" onClick={() => { setBusca(""); setBuscaInput(""); setPagina(0); }} style={{ padding: "5px 10px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", fontSize: "0.73rem" }}>Limpar</button>}
-        </form>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {dados && <span style={{ fontSize: "0.68rem", color: "#7a9a84" }}>{total.toLocaleString("pt-BR")} registros</span>}
-          <button type="button" onClick={carregar} disabled={carregando}
-            style={{ padding: "5px 11px", borderRadius: 7, background: "#f0f5f2", border: "1px solid #d0ddd6", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: "0.72rem", opacity: carregando ? 0.6 : 1 }}>
-            <RefreshCw size={11} style={{ animation: carregando ? "spin 1s linear infinite" : "none" }} /> Atualizar
-          </button>
-        </div>
-      </div>
-
-      {carregando && !dados && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "28px 0", color: "#888", fontSize: "0.78rem" }}>
-          <RefreshCw size={14} style={{ animation: "spin 1s linear infinite", color: "var(--accent)" }} /> Carregando ATPV...
-        </div>
-      )}
-      {erro && <div style={{ background: "#fdf3f2", border: "1px solid #f0c0bc", borderRadius: 8, padding: "10px 14px", fontSize: "0.75rem", color: "#c0392b", marginBottom: 10, whiteSpace: "pre-wrap" }}>{erro}</div>}
-
-      {/* Tabela */}
-      {dados && dados.linhas.length > 0 && (
-        <div style={{ overflowX: "auto", borderRadius: 8, border: "1px solid #e0e8e0" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.73rem" }}>
-            <thead>
-              <tr style={{ background: "#f4f9f5" }}>
-                {["ID", "Veículo", "Data Venda", "Hora", "CRV Nro", "Vendedor", "CPF/CNPJ Vend.", "Comprador", "CPF/CNPJ Comp.", "Valor Venda", "Ações"].map(h => (
-                  <th key={h} style={{ padding: "7px 10px", textAlign: "left", fontWeight: 700, color: "#4a6555", fontSize: "0.62rem", textTransform: "uppercase", borderBottom: "2px solid #d8e8d8", whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dados.linhas.map((row, i) => (
-                <tr key={String(row.ID ?? i)} style={{ background: i % 2 === 0 ? "#fff" : "#f8fbf8", cursor: "pointer" }}
-                  onClick={() => setModal(row)}>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap", fontWeight: 700, color: "var(--accent)" }}>{String(row.ID ?? "")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap" }}>{String(row.VEINUMER ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap" }}>{fmtData(row.DATAVENDA)}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap", color: "#555", fontVariantNumeric: "tabular-nums" }}>{String(row.HORA ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap" }}>{String(row.CRV_NRO ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(row.VEND_NOME ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap" }}>{String(row.VEND_CPFCG ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{String(row.COMP_NOME ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap" }}>{String(row.COMP_CPFCG ?? "—")}</td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0", whiteSpace: "nowrap", textAlign: "right" }}>
-                    {row.VLRVENDA != null ? moedaAtpv.format(Number(row.VLRVENDA)) : "—"}
-                  </td>
-                  <td style={{ padding: "5px 10px", borderBottom: "1px solid #f0f4f0" }}>
-                    <button type="button" onClick={e => { e.stopPropagation(); setModal(row); }}
-                      style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 9px", borderRadius: 5, border: "1px solid #d0ddd6", background: "#f0f8f2", cursor: "pointer", fontSize: "0.67rem", fontWeight: 700, color: "var(--accent)" }}>
-                      <Eye size={11} /> Ver
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {dados && dados.linhas.length === 0 && !carregando && (
-        <div style={{ textAlign: "center", padding: "32px 0", color: "#888", fontSize: "0.8rem" }}>Nenhum ATPV encontrado.</div>
-      )}
-
-      {/* Paginação */}
-      {totalPag > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginTop: 16 }}>
-          <button type="button" disabled={pagina === 0 || carregando} onClick={() => setPagina(p => p - 1)}
-            style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #d0ddd6", background: "#f0f5f2", cursor: pagina === 0 ? "not-allowed" : "pointer", opacity: pagina === 0 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem", fontWeight: 600 }}>
-            <ChevronLeft size={13} /> Anterior
-          </button>
-          <span style={{ fontSize: "0.73rem", color: "#666" }}>{pagina + 1} / {totalPag}</span>
-          <button type="button" disabled={pagina >= totalPag - 1 || carregando} onClick={() => setPagina(p => p + 1)}
-            style={{ padding: "5px 12px", borderRadius: 7, border: "1px solid #d0ddd6", background: "#f0f5f2", cursor: pagina >= totalPag - 1 ? "not-allowed" : "pointer", opacity: pagina >= totalPag - 1 ? 0.4 : 1, display: "flex", alignItems: "center", gap: 4, fontSize: "0.73rem", fontWeight: 600 }}>
-            Próximo <ChevronRight size={13} />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function VeiculosTab({ config }: { config: SgdwConfig }) {
   const [busca, setBusca]           = useState("");
   const [buscaInput, setBuscaInput] = useState("");
@@ -2521,7 +2334,7 @@ function CriarClienteForm({ config, onFechar, onCriado }: {
 
 // ─── Main Explorer ────────────────────────────────────────────────────────────
 
-export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
+export default function DashExplorer({ config }: { config: SgdwConfig }) {
   const [aba, setAba]               = useState<SgdwExplorerAba>("os");
   const [pagina, setPagina]         = useState(0);
   const [buscaInput, setBuscaInput] = useState("");
@@ -2569,7 +2382,7 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
   }
 
   const fetchDados = useCallback(async () => {
-    if (aba === "schema" || aba === "empresas" || aba === "veiculos" || aba === "atpv") return;
+    if (aba === "schema" || aba === "empresas" || aba === "veiculos") return;
     setCarregando(true); setErro(null);
     try {
       let r: SgdwPaginaDados;
@@ -2729,8 +2542,6 @@ export default function SgdwExplorer({ config }: { config: SgdwConfig }) {
           <EmpresasTab config={config} />
         ) : aba === "veiculos" ? (
           <VeiculosTab config={config} />
-        ) : aba === "atpv" ? (
-          <AtpvTab config={config} />
         ) : (
           <>
             {/* KPI bar */}

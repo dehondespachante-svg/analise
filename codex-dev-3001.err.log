@@ -1,0 +1,8 @@
+⨯ Another next dev server is already running.
+
+- Local:        http://localhost:3000
+- PID:          10912
+- Dir:          C:\Users\BETO\Desktop\honorarios-app
+- Log:          .next\dev\logs\next-development.log
+
+Run taskkill /PID 10912 /F to stop it.

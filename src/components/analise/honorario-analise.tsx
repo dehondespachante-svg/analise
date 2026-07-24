@@ -53,6 +53,7 @@ import {
   X,
 } from "lucide-react";
 import SgdwConexao from "@/src/components/analise/sgdw-tab";
+import DashConexao from "@/src/components/analise/dash-tab";
 import {
   carregarBaseAnualCache,
   carregarRelatorioCache,
@@ -80,7 +81,7 @@ type Aba =
   | "metas"
   | "metaFuncionarios"
   | "auditoria";
-type ModoAnalise = "honorarios" | "dados-locais" | "sgdw";
+type ModoAnalise = "honorarios" | "dados-locais" | "sgdw" | "dash";
 type CenarioId = "base" | "bull" | "bear" | "stress";
 type AbaLocal = "visao" | "cidades" | "estrategia" | "listas" | "qualidade";
 
@@ -2380,7 +2381,7 @@ function DadosLocaisConteudo({
   );
 }
 
-export default function AnaliseHonorariosPage() {
+export default function AnaliseHonorariosPage({ ocultarExploradorSgdw = false }: { ocultarExploradorSgdw?: boolean } = {}) {
   const [modoAnalise, setModoAnalise] = useState<ModoAnalise>("honorarios");
   const [abaAtiva, setAbaAtiva] = useState<Aba>("comparacao");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -2388,10 +2389,12 @@ export default function AnaliseHonorariosPage() {
   const loteInputRef = useRef<HTMLInputElement | null>(null);
   const [relatorioUpload, setRelatorioUpload] = useState<RelatorioHonorarios | null>(null);
   const [sgdwRelatorio, setSgdwRelatorio] = useState<RelatorioHonorarios | null>(null);
-  const relatorioAtivo = useMemo(
-    () => (modoAnalise === "sgdw" ? sgdwRelatorio : relatorioUpload),
-    [modoAnalise, sgdwRelatorio, relatorioUpload]
-  );
+  const [dashRelatorio, setDashRelatorio] = useState<RelatorioHonorarios | null>(null);
+  const relatorioAtivo = useMemo(() => {
+    if (modoAnalise === "sgdw") return sgdwRelatorio;
+    if (modoAnalise === "dash") return dashRelatorio;
+    return relatorioUpload;
+  }, [modoAnalise, sgdwRelatorio, dashRelatorio, relatorioUpload]);
   const [baseAnualLocal, setBaseAnualLocal] = useState<BaseAnualCache | null>(null);
   const [processando, setProcessando] = useState(false);
   const [statusUpload, setStatusUpload] = useState("");
@@ -5076,6 +5079,14 @@ export default function AnaliseHonorariosPage() {
   return (
     <main className={styles.page} data-print-scope={escopoImpressao || undefined}>
 
+      {/* Animated background — orbs + grid */}
+      <div className={styles.bgLayer} aria-hidden="true">
+        <div className={styles.orbA} />
+        <div className={styles.orbB} />
+        <div className={styles.orbC} />
+        <div className={styles.grid} />
+      </div>
+
       {/* Hidden file inputs */}
       <input
         id="analise-arquivos-input"
@@ -5142,10 +5153,18 @@ export default function AnaliseHonorariosPage() {
             <Wifi size={15} />
             <span>SGDW</span>
           </button>
+          <button
+            type="button"
+            className={`${styles.sidebarModeBtn} ${modoAnalise === "dash" ? styles.sidebarModeBtnActive : ""}`}
+            onClick={() => { setModoAnalise("dash"); setSidebarOpen(false); }}
+          >
+            <Wifi size={15} />
+            <span>Dash</span>
+          </button>
         </div>
 
-        {/* Nav items */}
-        {modoAnalise === "honorarios" && (
+        {/* Nav items — Honorários, SGDW e Dash compartilham as mesmas abas de análise */}
+        {(modoAnalise === "honorarios" || modoAnalise === "sgdw") && (
           <nav className={styles.sidebarNav} aria-label="Abas da analise">
             {abas.map((aba) => (
               <button
@@ -5202,48 +5221,18 @@ export default function AnaliseHonorariosPage() {
         </div>
       </aside>
 
+      {/* Mobile hamburger FAB — visible only on mobile (≤768px) */}
+      <button
+        type="button"
+        className={styles.mobileHamburger}
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Abrir menu"
+      >
+        <Menu size={20} />
+      </button>
+
       {/* ── Main area ── */}
       <div className={styles.mainArea}>
-
-        {/* Glass header */}
-        <header className={styles.glassHeader}>
-          <button
-            type="button"
-            className={styles.hamburgerBtn}
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Abrir menu"
-          >
-            <Menu size={20} />
-          </button>
-
-          <div className={styles.glassHeaderBrand}>
-            <BarChart3 size={18} />
-            <span>Eny <strong>Analise</strong></span>
-          </div>
-
-          {/* Status badges visible on header */}
-          <div className={styles.glassHeaderActions}>
-            {statusUpload && !relatorioUpload && <span className={styles.headerStatusOk}>{statusUpload}</span>}
-            {relatorioUpload && (
-              <span className={styles.headerFileBadge}>
-                <CheckCircle2 size={13} />
-                {relatorioUpload.arquivos.length} arquivo(s)
-              </span>
-            )}
-            <button
-              type="button"
-              className={styles.headerBtnPrimary}
-              onClick={() => abrirSeletorArquivo(inputRef, "analise-arquivos-input")}
-              disabled={processando}
-            >
-              <Layers size={15} />
-              <span>{processando ? "Processando..." : relatorioUpload ? "Adicionar" : "Anexar PDFs"}</span>
-            </button>
-            <button className={styles.headerBtnGhost} type="button" onClick={() => window.print()} title="Imprimir">
-              <Printer size={15} />
-            </button>
-          </div>
-        </header>
 
         <div className={styles.pageBody}>
         {modoAnalise === "dados-locais" && (
@@ -5260,40 +5249,13 @@ export default function AnaliseHonorariosPage() {
           />
         )}
 
-        {modoAnalise === "sgdw" && <SgdwConexao onRelatorio={setSgdwRelatorio} />}
+        {modoAnalise === "sgdw" && <SgdwConexao onRelatorio={setSgdwRelatorio} ocultarExplorador={ocultarExploradorSgdw} />}
+        {modoAnalise === "dash" && <DashConexao onRelatorio={setDashRelatorio} ocultarExplorador={ocultarExploradorSgdw} />}
 
-        {modoAnalise === "sgdw" && !!relatorioAtivo && (
-          <div style={{ background: "#fff", border: "1px solid #dde8e0", borderRadius: 12, margin: "0 0 8px", overflow: "hidden" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px", background: "#f4f9f6", borderBottom: "1px solid #dde8e0" }}>
-              <LineChartIcon size={15} style={{ color: "var(--accent)", flexShrink: 0 }} />
-              <span style={{ fontWeight: 700, fontSize: "0.85rem", color: "var(--accent)" }}>Analise de ganhos e metas</span>
-            </div>
-            <div style={{ display: "flex", gap: 6, padding: "8px 12px", overflowX: "auto", flexWrap: "nowrap" }}>
-              {abas.map((aba) => (
-                <button
-                  key={aba.id}
-                  type="button"
-                  onClick={() => setAbaAtiva(aba.id)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 5,
-                    padding: "5px 12px", borderRadius: 7, fontSize: "0.76rem", fontWeight: 600,
-                    whiteSpace: "nowrap", cursor: "pointer", flexShrink: 0,
-                    background: abaAtiva === aba.id ? "var(--accent)" : "#f0f5f2",
-                    color: abaAtiva === aba.id ? "#fff" : "var(--text-secondary)",
-                    border: abaAtiva === aba.id ? "1px solid var(--accent)" : "1px solid #d0ddd6",
-                  }}
-                >
-                  {aba.icon}
-                  {aba.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
 
         <div className={(modoAnalise === "honorarios" || (modoAnalise === "sgdw" && !!relatorioAtivo)) ? "" : styles.modeHidden}>
         <section className={`${styles.topPanel} ${relatorioAtivo ? "" : styles.topPanelEmpty}`}>
-          {modoAnalise !== "sgdw" && (
+          {(modoAnalise !== "sgdw" && modoAnalise !== "dash") && (
           <div className={styles.topIntro}>
             <h1>Analise de ganhos e metas</h1>
             <p>
